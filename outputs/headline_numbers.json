@@ -1,0 +1,119 @@
+{
+ "coverage": [
+  {
+   "source": "appstore",
+   "raw_records": 5500,
+   "unique_docs": 4292,
+   "flagged_spam": 136,
+   "relevant_nonspam": 1212,
+   "sip_journey_core": 229
+  },
+  {
+   "source": "playstore",
+   "raw_records": 35550,
+   "unique_docs": 25481,
+   "flagged_spam": 1791,
+   "relevant_nonspam": 5353,
+   "sip_journey_core": 1124
+  },
+  {
+   "source": "reddit",
+   "raw_records": 19021,
+   "unique_docs": 18400,
+   "flagged_spam": 861,
+   "relevant_nonspam": 15228,
+   "sip_journey_core": 14310
+  },
+  {
+   "source": "tradingqna",
+   "raw_records": 5872,
+   "unique_docs": 5068,
+   "flagged_spam": 163,
+   "relevant_nonspam": 2567,
+   "sip_journey_core": 1015
+  },
+  {
+   "source": "valuepickr",
+   "raw_records": 7708,
+   "unique_docs": 7344,
+   "flagged_spam": 342,
+   "relevant_nonspam": 3394,
+   "sip_journey_core": 437
+  },
+  {
+   "source": "x",
+   "raw_records": 137,
+   "unique_docs": 136,
+   "flagged_spam": 49,
+   "relevant_nonspam": 58,
+   "sip_journey_core": 49
+  },
+  {
+   "source": "youtube",
+   "raw_records": 41600,
+   "unique_docs": 36577,
+   "flagged_spam": 2875,
+   "relevant_nonspam": 8531,
+   "sip_journey_core": 1897
+  },
+  {
+   "source": "TOTAL",
+   "raw_records": 115388,
+   "unique_docs": 97298,
+   "flagged_spam": 6217,
+   "relevant_nonspam": 36343,
+   "sip_journey_core": 19061
+  }
+ ],
+ "lang_core": {
+  "english": 17934,
+  "hinglish": 804,
+  "romanised-other(unclear)": 179,
+  "tanglish": 64,
+  "indic-script:hindi": 38,
+  "indic-script:malayalam": 14,
+  "indic-script:mixed-indic-script": 13,
+  "indic-script:tamil": 13,
+  "indic-script:telugu": 2
+ },
+ "base_stop_pct": 8.063585331304758,
+ "base_low_rating_pct": 42.86770140428677,
+ "lapse_class": {
+  "voluntary": 2410,
+  "lapse-language only": 961,
+  "involuntary": 900,
+  "both": 175
+ },
+ "n_lapse_evidence": 4446,
+ "cohort_n": {
+  "dropper (first-person stop/pause/fail language)": 430,
+  "continuer (first-person continuing language)": 181
+ },
+ "checks_any_n": 180,
+ "groww_n": 1824,
+ "stance_pred": {
+  "A": 8269,
+  "Q": 6033,
+  "E": 3685,
+  "O": 1074
+ },
+ "outcome_pred_E": {
+  "N": 2488,
+  "K": 1082,
+  "S": 74,
+  "C": 35,
+  "P": 6
+ },
+ "N_core": 19061,
+ "n_years": {
+  "2018": 34,
+  "2019": 100,
+  "2020": 133,
+  "2021": 198,
+  "2022": 151,
+  "2023": 3413,
+  "2024": 4860,
+  "2025": 4245,
+  "2026": 2300
+ }
+}

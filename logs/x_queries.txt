@@ -1,0 +1,10 @@
+X MCP search_posts_all queries issued (max_results=100 each, full archive search, sort default):
+1. ("stopped my SIP" OR "paused my SIP" OR "stop my SIP") lang:en -is:retweet
+2. Groww SIP (stopped OR paused OR failed OR cancelled OR mandate OR autopay) -is:retweet
+3. ("first SIP" OR "started my SIP" OR "started SIP" OR "new investor") (mutual fund OR SIP) India -is:retweet
+4. SIP ("negative returns" OR "in red" OR "in loss" OR "no returns" OR "underperform") mutual fund -is:retweet lang:en
+5. ("should I stop" OR "should I continue" OR "should i pause" OR "stop SIP" OR "discontinue SIP") SIP -is:retweet
+6. SIP ("failed" OR "bounced" OR "insufficient balance" OR "not deducted" OR "autopay" OR "mandate") mutual fund -is:retweet
+7. ("SIP band" OR "SIP rok" OR "SIP pause" OR "SIP chalu" OR "SIP kar raha" OR "SIP kar rahe") -is:retweet
+8. SIP ("my salary" OR "EMI" OR "expenses" OR "cash crunch" OR "emergency fund" OR "job loss") (stopped OR pause OR reduce OR cancel) -is:retweet
+9. @Groww_Support OR @growwapp OR @buildwithgroww (SIP OR "mutual fund") -is:retweet

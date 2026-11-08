@@ -1,0 +1,13 @@
+journey_core docs: 19061
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 9629.17it/s]
+embedded 1918 / 1918
+source
+appstore        229
+playstore      1124
+reddit        14310
+tradingqna     1015
+valuepickr      437
+x                49
+youtube        1897
+dtype: int64
+docs with >=1 code: 0.684

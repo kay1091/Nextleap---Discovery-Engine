@@ -1,0 +1,34 @@
+/workspace/groww-discovery/scripts/06b_segments_funnel.py:5: DtypeWarning: Columns (1: product, 3: date, 9: likes) have mixed types. Specify dtype option on import or set low_memory=False.
+  d=pd.read_csv("data/processed/corpus_coded.csv"); d["codes"]=d.codes.fillna(""); d["text"]=d.text.fillna("")
+/workspace/groww-discovery/scripts/06b_segments_funnel.py:9: UserWarning: This pattern is interpreted as a regular expression, and has match groups. To actually get the groups, use str.extract.
+  d["stop_lang"]=d.text.str.contains(STOP)
+/workspace/groww-discovery/scripts/06b_segments_funnel.py:10: UserWarning: This pattern is interpreted as a regular expression, and has match groups. To actually get the groups, use str.extract.
+  d["stop_lang_first_person"]=d.stop_lang & d.text.str.contains(r"\b(i|my|me|we|our|maine|mera|meri|mere)\b",flags=I,regex=True)
+              attribute  tagged  pct_of_journey_core  pct_of_experience_docs
+0               seg_age     879                  4.6                     2.3
+1        seg_occupation    2097                 11.0                     6.8
+2  seg_income_stability     466                  2.4                     1.2
+3      seg_money_source    2318                 12.2                     6.1
+4         seg_influence    1149                  6.0                     8.0
+stage
+unknown          9678
+Pre/at set-up    2602
+M12+             2215
+M7-12            1896
+M4-6             1248
+M0-1             1113
+M2-3              309
+Name: count, dtype: int64
+stage_basis
+unknown               9678
+inferred from code    5515
+time cue              3868
+Name: count, dtype: int64
+lapse_class
+                       14615
+voluntary               2410
+lapse-language only      961
+involuntary              900
+both                     175
+Name: count, dtype: int64
+0.08063585331304758

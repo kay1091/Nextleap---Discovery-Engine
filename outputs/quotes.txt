@@ -1,0 +1,84 @@
+# topic|||doc_id|||verbatim quote
+SI_FAILED|||PL5c21656f|||the SIPs are not deducted even with adequate account balance and you are then charged ecs bouncing charges
+SI_FAILED|||PL189d19ad|||Missing Sip payment equals cheque bounce in terms of bank charges.
+SI_FAILED|||YOadcf7971|||Banks deducting charging 250 t0 300 for 1000 sip per month rejection and these SIP belong to Maids, Driver and security guards simply saying no fund balance
+SI_MANDATE|||PL27507268|||I am forced to choose the maximum auto debit limit as 25 lacs. Actually you should not force us to choose such a high limit
+SI_MANDATE|||PL65c8b1bc|||problem is bank mandate not goes well. You have to add money every month for your SIP installments.
+SI_STUCK|||PL240b5fa7|||my payment of sip investment is still to be in processing in past 5 days (it usually takes 2-3 days)
+SI_STUCK|||REaed063c5|||My SIP was scheduled for 9th of the month, amount got debited on 9th (early morning) but the units haven't been allotted
+SI_ZOMBIE|||PLa79c28b7|||Even after raising tickets 4 times, the issue is not yet resolved. Repeatedly getting notifications of failed sip payment, even after the the sip is cancelled 2 months ago.
+SI_ZOMBIE|||PL179cf1d7|||amount has been debited for a SIP that I didn't want to start
+SI_HALT|||RE5250f319|||They have stopped lumpsum last year itself. But recently they have stopped new SIP registrations too.
+SI_HALT|||TRf50ab741|||This month, Zerodha placed order for it as usual, but few days later AMC refunded the whole money.
+IA_PAUSE_FRICTION|||TRbd024b0f|||Will I get Refund if I Stop the SIP After Paying the Initial Investment?
+IA_PAUSE_FRICTION|||PL2a92a8ee|||I am not able to cancel SIP on this app. They give option to cancel but don't let you cancel the SIP and takes you back to all sips page.
+IA_PAUSE_FRICTION|||PL9da3e9c5|||6 steps we have to do to cancel SIP
+IA_PAUSE_FRICTION|||TRac2068c3|||Wont I have the option to pause and modify anymore?
+IA_ALERTS|||PL6becdb01|||person should get a notification to check that proper fund is available in zerodha account for SIP order
+IA_ALERTS|||PL86068229|||Please give notifications regarding order processing ,order placed, money added , pending orders,sip reminder when insufficient funds
+IA_ALERTS|||PL4ddbbb38|||They didn't remind us if any SIPs skipped, being free app I think this has to bear or keep checking every month whether SIP deducted or not.
+IA_ALERTS|||REbd0da038|||My last few months SIP shows skipped. Wonder why groww didn't notify me!!
+IA_SUPPORT|||PL9d613922|||my Money deducted from my account and that was not added into My SIP
+IA_SUPPORT|||PLc56fd30d|||who is the responsible for penalty charged by bank
+IA_SUPPORT|||PL0d8a5712|||their customer care will not answer your call and you will just keep playing with the ticket numbers
+IA_FLEX_GAP|||PL896e19cd|||Coin is not sending mobile notification when an SIP order is ready for payment.
+IA_FLEX_GAP|||TR0e4d19f4|||Still questions regarding editing the installment amount.
+IA_FLEX_GAP|||PLd8293533|||please add feature stock Share SIP options
+IA_METRICS|||TR3ee7f4e0|||Measuring your returns in XIRR makes sense only for SIPs where the duration of investments is more than 1 year.
+IA_METRICS|||RE71825839|||XIRR of my current portfolio is 22.63% and the absolute returns are 33.17%
+IA_METRICS|||PL3d6b95bd|||right now for each sip showing return percentage but not on total investments.
+BH_UNDERWHELM|||YOb95d4c06|||After 3 years of sip investment I would suggest don't put your money in mutual funds the growth rate is nearly 9% on an average we already get 7.1 from fd.
+BH_UNDERWHELM|||RE71057917|||be happy with 10% xirr in this market condition even i have been doing sip for 5 years mine is also 11% xirr
+BH_RED|||REfff8a161|||If you stop the SIP now you ll be at a loss of 8%
+BH_RED|||RE62c8edac|||having negative returns int he first few years is a good thing. The lower the NAV is, the more units you get.
+BH_RED|||YO8414ee0b|||my sip friends are around 10%return as they stopped sip during crash
+CO_THROUGH|||YOc3486774|||I never stop SIP whether the market is up or down
+SV_MARKET|||YOa0b39d53|||One should stop sip or stay invested!?
+SV_MARKET|||RE009b1dde|||My SIP portfolio is down by 25%. What should I do now?
+SV_RETURNS|||RE23879caa|||My debt fund got more return than that. Should I stop SIP and do a SWP and invest in another mutual fund.
+SV_RETURNS|||RE2b6da155|||Should i stop the sip and shift to the large midcap index fund?
+SV_SWITCH|||REba8a0631|||i stopped my sip's and started giving liquidity in options
+SV_SWITCH|||RE19fa6b2d|||When market reached 25000+ levels, I stopped the SIP, and now did the lumpsum instead at 23500 level
+SV_SWITCH|||PL52765b27|||not able to delete or pause SIP.. once they moved to bse star, its not working properly.
+SV_DISTRUST|||PL0adcfcee|||portfolios are also fake on this app when you are part of the sip it will show you loss and once you are tired of it and redeem it will show you hight interest suddenly
+ST_GOAL|||RE4753807e|||I'm looking at a 10 year Horizon, goal is to fund children's education, buy a house even. Been using Groww.
+ST_GOAL|||RE69c62990|||Want to start a sip in an instrument and build wealth over next 10 years .
+ST_SMALL_HABIT|||PL01623ef0|||As a 22 years old begglinner investor, i found groww extremely simple and user friendly. i started my fast sip last month without any hassle..
+ST_SMALL_HABIT|||RE0617d689|||I'm a student and I'm doing an internship as part of my course for which i get stipend. I can set apart Rs 500 every month
+ST_SMALL_HABIT|||RE5454b1e7|||when I tried starting an SIP of ₹100 on Zerodha Coin I was shown a warning that Min. SIP amt is ₹1000 (one thousand)
+ST_SOCIAL|||REd9648563|||my friend suggested invest in sip and mutual funds
+ST_SOCIAL|||RE3e4b961d|||Since I saw some videos about sips I started investing my money in MF through sips. I don’t know much about markets and mutual funds so I just randomly picked some mutual funds
+ST_EXPECT_RET|||YO15fd064f|||Mera to sip 2% return dikha rha hain , 3 saal ho gye hain .
+ST_EXPECT_RET|||VA0bcc9bce|||15% CAGR looks like a more realistic and safer bet, considering a conservative approach.
+ST_EXPECT_RET|||REe2fa019a|||In 15 years, with say 15% returns, you can reach one crore as per a step-up SIP calculator.
+BH_STEPUP|||PL3e4d2cfc|||after I have done enough research and want to increase my SIP, I currently have to pause my existing ones and make a new one.
+BH_TIMING|||RE244f35de|||I wish for dip every month during my sip date.
+BH_CHECK|||PL985cd861|||The ability to track daily portfolio wide and individual mutual fund returns. 2. Clear filters for paused/active SIPs. Lumping them in the same window with a tag often causes confusion.
+BH_CHECK|||RE34d364d1|||Hope I don't get obsessed with checking the MF everyday tho
+BH_CHECK|||REc42d3ce8|||I realised my mistake of not checking up my portfolio often
+OU_COMMUNITY|||RE7e49568b|||My age is 24 and I earn around 38-40k. Please suggest me anything that I can do better.
+OU_COMMUNITY|||RE43c4bb2e|||I want some opinions on my portfolio, anything redundant I should remove? Or any fund I'm missing out in my portfolio.
+OU_CREATOR|||YO3c1a4e8c|||Please make a video on today's market condition where there is a issue of smallcap and Midcap mutual funds not accepting the sip
+OU_COMPARE|||REee8036a3|||Stop all voluntary investments like SIP, FD, gold and continue with epf, term insurance premium, health insurance premium.
+OU_TRACKER|||PLbc071180|||Show daily growth 2. Show IRR/XIRR 3. Show the complete amount not 2.1L. 4. Reduce the minimum investment amount to 500.
+CO_AUTOMATE|||RE8f8e74a6|||I've been doing SIP with auto-pay without any problem.
+CO_AUTOMATE|||RE3438204c|||Staying consistent with your SIPs keeps you disciplined and turns market ups and downs to your advantage.
+CO_AUTOMATE|||REa5738536|||Just invest. Don't look back for next 5-7yrs.
+SV_CASH|||RE8e2a37a5|||I’ve stopped my SIP ever since I lost my job in dec 2023. Only my gold kitty continuing and that too I’m planning to close. Need to first pay off my EMIs.
+SV_CASH|||RE51865478|||Do you think pausing the SIP/ Savings for a while to repay the loan is good idea?
+SV_CASH|||RE2d28545a|||stopped all SIPs last month. As i purchased a house.
+CO_THROUGH|||RE587906c7|||So never skipped any SIp.
+CO_THROUGH|||YO383bf220|||I never stopped doing SIP but growth is reverse
+BH_CHECK|||REd56b08ba|||its seems you open the app everyday to check. SIP is not equity. no need to check that often.
+BH_CHECK|||YO0a457cca|||i do not check my portfolio like daily, weekly or monthly.
+SEG_FREELANCE|||TRe4c68bf9|||Freelancers here, do you follow a fixed monthly SIP or invest only when you have a good month?
+IA_METRICS|||YOf10f1e6a|||Angle one la mutual fund step up yeppadi panrathu bro konjam demo sollunga
+IA_PAUSE_FRICTION|||RE4b051c71|||There's no option to cancel/stop in the list of SIPs.
+IA_PAUSE_FRICTION|||REce29bdc6|||groww dont allow u to delete the auto pay via otp from your primary bank
+IA_PAUSE_FRICTION|||RE0f2e6615|||Uninstalling Groww won't stop the SIP.
+SI_FAILED|||REfebbae19|||It skipped 5th Feb saying there needs to be atleast 30 days gap between 1st installment and sip date. What do I do now?
+SI_MANDATE|||PL739bc217|||I am setting the SIP date as 1st of every month, but money getting dedyon 30th of the month.
+IA_FLEX_GAP|||APb62783e7|||SIP me Step-Up ka option available nahi hai. Long-term investors ke liye annual SIP Step-Up bahut important feature hai.
+IA_FLEX_GAP|||RE8bd7faf3|||can cancel an SIP and recreate it with a bigger amount or if step up option is available than thats great as well.
+IA_FLEX_GAP|||PLc5850b59|||I am not able to step up my daily sips on this app.
+ERR_BH_FORGET|||REffb6d67d|||MFs keep your investments discipined as you can set up SIPs and just forget about them.

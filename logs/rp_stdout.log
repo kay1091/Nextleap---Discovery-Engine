@@ -1,0 +1,4 @@
+/workspace/groww-discovery/scripts/01b_collect_reddit.py:52: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+  rec={"source":"reddit","kind":"post" if mode=="posts" else "comment","id":x["id"],"subreddit":x.get("subreddit"),"date":dt.datetime.utcfromtimestamp(x["created_utc"]).isoformat(),"score":x.get("score"),
+2026-10-28T19:24:48 DONE posts r/IndiaInvestments q=SIP new=513
+2026-10-28T19:27:31 DONE posts r/IndiaInvestments q=groww new=77

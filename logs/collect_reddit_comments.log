@@ -1,0 +1,10 @@
+2026-10-28T19:33:59 DONE comments r/IndiaInvestments q=SIP new=2386
+2026-10-28T19:36:00 HTTP 520 {'subreddit': 'IndianStockMarket', 'after': '2023-09-13', 'before': '2023-09-28', 'limit': 100, 'sort': 'asc', 'body': 'SIP'}
+2026-10-28T19:36:29 HTTP 520 {'subreddit': 'IndianStockMarket', 'after': '2023-09-28', 'before': '2023-10-01', 'limit': 100, 'sort': 'asc', 'body': 'SIP'}
+2026-10-28T19:37:30 HTTP 520 {'subreddit': 'IndianStockMarket', 'after': '2024-01-03', 'before': '2024-01-11', 'limit': 100, 'sort': 'asc', 'body': 'SIP'}
+2026-10-28T19:39:51 HTTP 520 {'subreddit': 'IndianStockMarket', 'after': '2024-06-24', 'before': '2024-07-24', 'limit': 100, 'sort': 'asc', 'body': 'SIP'}
+2026-10-28T19:49:20 DONE comments r/IndianStockMarket q=SIP new=3775
+2026-10-28T20:06:18 DONE comments r/personalfinanceindia q=SIP new=6307
+2026-10-28T20:08:42 DONE comments r/FIREIndia q=SIP new=185
+2026-10-28T20:08:48+05:30 STOPPED manually (time budget): collectors killed; remaining subreddits not collected
+2026-10-28T15:00:48+00:00 r/mutualfunds comments: PARTIAL (collector stopped for time budget after ~2.5k comments; date coverage incomplete)

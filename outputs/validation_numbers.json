@@ -1,0 +1,78 @@
+{
+ "spam_audit_n": 36,
+ "spam_flag_precision": 0.3888888888888889,
+ "train_n": 542,
+ "holdout_n": 150,
+ "audit_n": 200,
+ "holdout_by_source": {
+  "reddit": 75,
+  "youtube": 32,
+  "playstore": 19,
+  "tradingqna": 19,
+  "appstore": 5
+ },
+ "holdout_lang": "'DataFrame' object has no attribute 'lang_group'",
+ "eval_summary": [
+  {
+   "method": "regex_only",
+   "codes_with_support_ge5": 14,
+   "macro_precision": 0.327,
+   "macro_recall": 0.464,
+   "macro_f1": 0.367,
+   "mean_kappa": 0.322,
+   "micro_precision": 0.267,
+   "micro_recall": 0.494,
+   "micro_f1": 0.347,
+   "micro_kappa": 0.321
+  },
+  {
+   "method": "ml_only",
+   "codes_with_support_ge5": 14,
+   "macro_precision": 0.424,
+   "macro_recall": 0.464,
+   "macro_f1": 0.418,
+   "mean_kappa": 0.386,
+   "micro_precision": 0.411,
+   "micro_recall": 0.506,
+   "micro_f1": 0.454,
+   "micro_kappa": 0.436
+  },
+  {
+   "method": "ensemble",
+   "codes_with_support_ge5": 14,
+   "macro_precision": 0.474,
+   "macro_recall": 0.389,
+   "macro_f1": 0.401,
+   "mean_kappa": 0.371,
+   "micro_precision": 0.415,
+   "micro_recall": 0.466,
+   "micro_f1": 0.439,
+   "micro_kappa": 0.421
+  }
+ ],
+ "eval_stance": {
+  "acc": 0.7266666666666667,
+  "macro_f1": 0.6279272358945032,
+  "kappa": 0.6074050430896903,
+  "n": 150
+ },
+ "eval_outcome": {
+  "acc": 0.7266666666666667,
+  "macro_f1": 0.33267894895801875,
+  "kappa": 0.3514710534640936,
+  "n": 150
+ },
+ "quotes": {
+  "n": 83,
+  "verbatim": 83,
+  "pii": 0,
+  "sources": {
+   "reddit": 39,
+   "playstore": 26,
+   "youtube": 10,
+   "tradingqna": 6,
+   "valuepickr": 1,
+   "appstore": 1
+  }
+ }
+}

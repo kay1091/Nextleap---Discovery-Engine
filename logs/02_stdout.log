@@ -1,0 +1,36 @@
+[('raw records loaded', 114230), ('after dedupe by (source,id)', 108232), ('after dedupe by normalised text within source/product', 97298), ('SIP-journey core (explicit SIP/mandate/instalment talk, non-spam)', 19061), ('unique docs', 97298), ('flagged spam/low-signal', 6217), ('SIP/MF-relevant & non-spam', 36343)]
+            unique  spam  relevant  relevant_nonspam
+source                                              
+appstore      4292   136      1232              1212
+playstore    25481  1791      5427              5353
+reddit       18400   861     16009             15228
+tradingqna    5068   163      2666              2567
+valuepickr    7344   342      3620              3394
+x              136    49        91                58
+youtube      36577  2875      8823              8531
+lang
+english     76947
+hinglish     7020
+short        3742
+hindi        2022
+tanglish     1223
+other:id      847
+other:so      491
+other:et      387
+other:af      386
+other:tl      371
+tamil         308
+other:sw      288
+Name: count, dtype: int64
+source                     appstore  playstore  reddit  ...  valuepickr   x  youtube
+spam                                                    ...                         
+hashtag-spam                      0          1      25  ...          12   7        5
+mostly-non-alpha                  1         21       2  ...          17   0       70
+multi-link                        0          0     265  ...          85   2       62
+off-topic(beverage 'sip')         0          0       0  ...           0  30        0
+promo/solicit                    47        182     471  ...         206   4      622
+repeated-chars                    2        116      56  ...           6   0      205
+repeated-copy(>=4)                1         30       2  ...           0   0      119
+too-short(<3 words)              85       1441      40  ...          16   6     1792
+
+[8 rows x 7 columns]

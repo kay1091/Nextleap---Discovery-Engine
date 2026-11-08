@@ -1,0 +1,42 @@
+tradingqna q='SIP stopped' topics_total=150
+tradingqna q='SIP paused' topics_total=207
+tradingqna q='SIP failed' topics_total=256
+tradingqna q='SIP mandate' topics_total=342
+tradingqna q='SIP returns negative' topics_total=365
+tradingqna q='first SIP' topics_total=427
+tradingqna q='should I continue SIP' topics_total=471
+tradingqna q='stop SIP' topics_total=471
+tradingqna q='cancel SIP' topics_total=496
+tradingqna q='SIP not deducted' topics_total=542
+tradingqna q='SIP instalment failed' topics_total=542
+tradingqna q='Groww SIP' topics_total=557
+tradingqna q='Coin SIP' topics_total=618
+tradingqna q='SIP step up' topics_total=638
+tradingqna q='SIP insufficient balance' topics_total=639
+tradingqna q='SIP bank autopay limit' topics_total=639
+tradingqna q='new investor SIP' topics_total=666
+tradingqna q='SIP red portfolio' topics_total=683
+tradingqna q='SIP vs FD' topics_total=717
+tradingqna q='SIP XIRR' topics_total=729
+DONE tradingqna: topics=729 posts=5872
+valuepickr q='SIP stopped' topics_total=113
+valuepickr q='SIP paused' topics_total=120
+valuepickr q='SIP failed' topics_total=157
+valuepickr q='SIP mandate' topics_total=167
+valuepickr q='SIP returns negative' topics_total=189
+valuepickr q='first SIP' topics_total=268
+valuepickr q='should I continue SIP' topics_total=317
+valuepickr q='stop SIP' topics_total=317
+valuepickr q='cancel SIP' topics_total=318
+valuepickr q='SIP not deducted' topics_total=320
+valuepickr q='SIP instalment failed' topics_total=320
+valuepickr q='Groww SIP' topics_total=324
+valuepickr q='Coin SIP' topics_total=328
+valuepickr q='SIP step up' topics_total=349
+valuepickr q='SIP insufficient balance' topics_total=349
+valuepickr q='SIP bank autopay limit' topics_total=349
+valuepickr q='new investor SIP' topics_total=382
+valuepickr q='SIP red portfolio' topics_total=404
+valuepickr q='SIP vs FD' topics_total=454
+valuepickr q='SIP XIRR' topics_total=460
+DONE valuepickr: topics=460 posts=7708

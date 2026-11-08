@@ -1,0 +1,9 @@
+source,raw_records,unique_docs,flagged_spam,relevant_nonspam,sip_journey_core
+appstore,5500,4292,136,1212,229
+playstore,35550,25481,1791,5353,1124
+reddit,19021,18400,861,15228,14310
+tradingqna,5872,5068,163,2567,1015
+valuepickr,7708,7344,342,3394,437
+x,137,136,49,58,49
+youtube,41600,36577,2875,8531,1897
+TOTAL,115388,97298,6217,36343,19061

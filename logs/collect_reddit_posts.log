@@ -1,0 +1,20 @@
+2026-10-28T19:24:48 DONE posts r/IndiaInvestments q=SIP new=513
+2026-10-28T19:27:31 DONE posts r/IndiaInvestments q=groww new=77
+2026-10-28T19:32:20 DONE posts r/IndianStockMarket q=SIP new=688
+2026-10-28T19:34:13 HTTP 525 {'subreddit': 'IndianStockMarket', 'after': '2025-08-18', 'before': '2025-09-17', 'limit': 100, 'sort': 'asc', 'query': 'groww'}
+2026-10-28T19:36:30 HTTP 520 {'subreddit': 'IndianStockMarket', 'after': '2026-09-12', 'before': '2026-10-12', 'limit': 100, 'sort': 'asc', 'query': 'groww'}
+2026-10-28T19:36:33 DONE posts r/IndianStockMarket q=groww new=553
+2026-10-28T19:39:26 DONE posts r/personalfinanceindia q=SIP new=388
+2026-10-28T19:41:23 DONE posts r/personalfinanceindia q=groww new=125
+2026-10-28T19:43:35 DONE posts r/FIREIndia q=SIP new=16
+2026-10-28T19:46:25 DONE posts r/FIREIndia q=groww new=0
+2026-10-28T19:51:04 DONE posts r/mutualfunds q=SIP new=222
+2026-10-28T19:53:14 DONE posts r/mutualfunds q=groww new=522
+2026-10-28T19:55:31 DONE posts r/DalalStreetTalks q=SIP new=20
+2026-10-28T19:57:30 DONE posts r/DalalStreetTalks q=groww new=13
+2026-10-28T19:59:27 DONE posts r/indianstreetbets q=SIP new=205
+2026-10-28T20:01:19 DONE posts r/indianstreetbets q=groww new=139
+2026-10-28T20:04:01 DONE posts r/IndiaPersonalFinance q=SIP new=4
+2026-10-28T20:06:15 DONE posts r/IndiaPersonalFinance q=groww new=0
+2026-10-28T20:08:35 DONE posts r/StartInvestingIndia q=SIP new=0
+2026-10-28T20:08:48+05:30 STOPPED manually (time budget): collectors killed; remaining subreddits not collected

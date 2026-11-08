@@ -1,0 +1,41 @@
+code,independent_families,families
+ST_GOAL,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+ST_SOCIAL,0,
+ST_SMALL_HABIT,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+ST_VS_FD,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+ST_TAX,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+ST_EXPECT_RET,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+ST_NEED_GUIDE,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+BH_CHECK,0,
+BH_RED,1,YouTube
+BH_UNDERWHELM,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+BH_STEPUP,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+BH_TIMING,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+BH_FORGET,2,"Forums (TradingQ&A/ValuePickr), Reddit"
+SV_MARKET,1,YouTube
+SV_RETURNS,0,
+SV_CASH,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+SV_SWITCH,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+SV_DISTRUST,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+SV_FEES,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+SI_FAILED,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+SI_MANDATE,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+SI_STUCK,2,"Forums (TradingQ&A/ValuePickr), Store reviews"
+SI_ZOMBIE,0,
+SI_HALT,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+IA_METRICS,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+IA_PAUSE_FRICTION,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+IA_FLEX_GAP,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+IA_ALERTS,2,"Forums (TradingQ&A/ValuePickr), Store reviews"
+IA_SUPPORT,2,"Forums (TradingQ&A/ValuePickr), Store reviews"
+IA_ONBOARD,1,Store reviews
+IA_BUG,1,Store reviews
+IA_WITHDRAW,3,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews"
+OU_COMMUNITY,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+OU_COMPARE,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+OU_CREATOR,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+OU_PEOPLE,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+OU_TRACKER,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+CO_THROUGH,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
+CO_AUTOMATE,4,"Forums (TradingQ&A/ValuePickr), Reddit, Store reviews, YouTube"
+CO_LONGTERM,3,"Forums (TradingQ&A/ValuePickr), Reddit, YouTube"
