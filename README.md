@@ -1,50 +1,62 @@
-# Groww SIP Retention - AI-powered Discovery Engine (Part 1)
+# Groww SIP — Grok AI Discovery Engine (v0.1)
 
-Goal metric: % of first-time mutual-fund investors with an active SIP (>=1 successful instalment in the last 30 days) 12 months after their first SIP. Product chosen: **Groww** (store reviews also collected for ET Money, INDmoney, Kuvera, Paytm Money, Zerodha Coin as comparators). Constraints respected: no fund/stock recommendations, no fear/FOMO/urgency framing.
+**Purpose**: Extract, trace and analyze publicly available feedback that may reveal why first-time Indian mutual-fund SIP investors continue, pause or stop. Designed for the Product Management assignment due **9 Nov 2026**. It is a research tool, not investment advice.
 
-Everything here is derived from **public text**; it is directional, not Groww internal data. Read `AI_EVIDENCE_LOG.md` for what was validated and how, and `codebook.md` for the 40 codes.
+## Run locally
 
-## Layout
-- `scripts/` numbered pipeline (below); `data/raw/` collected records (JSONL); `data/processed/` cleaned/coded CSVs, embeddings cache, eval files; `labels/` hand labels (train, holdout, precision audit, spam audit); `outputs/` tables (scorecard, funnel, segments, quote verification, `quotes.txt`, `canvas.tsx`); `charts/` 7 PNGs; `logs/` collection and run logs.
+1. Install Python 3.10+.
+2. In this folder run `python -m pip install -r requirements.txt`.
+3. Set `XAI_API_KEY` in your environment (see `.env.example`); optionally set `APIFY_TOKEN` or `YOUTUBE_API_KEY`.
+4. Run `streamlit run app.py`.
+5. Use the **Collect** tab to fetch limited Apple India public RSS reviews or authorized imports. Load the two **manually sourced pilot excerpts** to test the data interface offline. If your Apify plan/source terms permit, configure and trigger the optional Google Play connector.
+6. Use **Analyze** to send selected source records through the Grok API (one paid API call per record).
+7. Under **Human evaluation**, label ~20 items without looking at AI output first; compare exact-match accuracy and log 2–3 corrections. Download the outputs; hosted Streamlit session state isn't durable.
+8. Open **Evidence & themes** to compare tagged feedback by source; avoid interpreting these percentages as Groww's user retention rates.
 
-## Pipeline (run in order from this directory)
-```
-python3 -m venv --system-site-packages .venv && . .venv/bin/activate
-pip install google-play-scraper yt-dlp youtube-comment-downloader scikit-learn matplotlib langdetect sentence-transformers requests pandas
-python scripts/01a_collect_playstore.py        # Play Store: 6 apps x 2 sorts x 5 star levels
-python scripts/01h_playstore_regional.py       # extra Play Store slice
-python scripts/01c_collect_appstore.py         # App Store RSS
-python scripts/01b_collect_reddit.py posts     # Reddit via Arctic Shift archive (slow); also: comments [subreddit]
-python scripts/01d_youtube_find_videos.py && python scripts/01e_youtube_comments.py
-python scripts/01f_discourse_forums.py         # TradingQ&A, ValuePickr
-python scripts/01g_parse_x.py                  # parses X search-tool outputs saved in data/raw/x_tool_outputs/
-python scripts/02_clean.py                     # dedupe, language, spam, relevance, journey_core
-python scripts/03a_embed_cluster.py            # bottom-up themes (clusters_embedding.md, topics_nmf.md)
-python scripts/03b_sample_for_coding.py        # samples for hand labelling (labels/ already included)
-python scripts/04_train_eval.py                # coder training + blind-holdout metrics
-python scripts/06a_code_corpus.py              # code all SIP-journey docs
-python scripts/06b_segments_funnel.py          # stop language, stage, segments, involuntary/voluntary
-python scripts/07c_audit_sample.py sample      # (label -> labels/audit_labels*.txt)  then: score
-python scripts/07a_analysis.py                 # frequencies, scorecard, funnel, segments, charts
-python scripts/08_verify_quotes.py             # every quote must exist verbatim in raw data
-python scripts/09_validation_extras.py && python scripts/10_make_docs.py && python scripts/11_build_canvas.py
-```
-`07b_cands.py` browses quote candidates (`python scripts/07b_cands.py CODE|AREA|regex:... [n]`). Shared definitions: `codebook.py`, `areas.py`, `common.py`.
+### Source coverage, restrictions and what is NOT provided
 
-## Data coverage (final corpus)
-| source | raw | unique | spam flagged | SIP/MF relevant | SIP-journey core |
-|---|---|---|---|---|---|
-| App Store | 5,500 | 4,292 | 136 | 1,212 | 229 |
-| Google Play | 35,550 | 25,481 | 1,791 | 5,353 | 1,124 |
-| Reddit | 19,021 | 18,400 | 861 | 15,228 | 14,310 |
-| TradingQ&A | 5,872 | 5,068 | 163 | 2,567 | 1,015 |
-| ValuePickr | 7,708 | 7,344 | 342 | 3,394 | 437 |
-| X | 137 | 136 | 49 | 58 | 49 |
-| YouTube | 41,600 | 36,577 | 2,875 | 8,531 | 1,897 |
-| **Total** | 115,388 | 97,298 | 6,217 | 36,343 | 19,061 |
+| Source | Collection method | Status / caveats |
+|---|---|---|
+| Groww Apple App Store (India) | Apple public review RSS; recent pages | Implemented, needs network connection at run time; feed is capped/limited |
+| Groww Google Play (India) | Third-party Apify Actor (`webdatatools/google-play-reviews-scraper`) | Implemented optionally; verify the provider's collection method, Google terms, charges and availability yourself; not an official Google API |
+| Reddit | Import only with appropriate research authorization | No Reddit crawler. As of May 2026 Reddit says academic research requires Reddit For Researchers program; no unauthenticated/bulk scraping |
+| TradingQ&A / forums | Authorised source-linked CSV/JSON import | Not an indiscriminate site crawler; check license, robots, and terms |
+| YouTube comments | Official YouTube Data API for selected video IDs; authorised export import | Implemented, needs API key and quota; top-level comments only by default |
+| User interviews / survey | Anonymized authorized import | Keep separate from public reviews, do not include emails, PAN, account numbers |
 
-## What could not be collected
-Reddit native JSON and PullPush blocked (used the Arctic Shift archive; stopped early - r/mutualfunds comments partial; several subreddits' comments/posts not collected); Quora blocked (403/Cloudflare); Google/DDG scraping blocked; Facebook/Instagram/WhatsApp not attempted; X only 137 posts; no Groww internal data. See `logs/`.
+**You cannot guarantee all historical reviews.** On-platform access limitations and terms apply. Source dates, language, region, sort order, missing pages and sample volumes must be recorded.
 
-## Limitations (short)
-Self-selected, negativity-biased public text; Reddit is 75% of the analysed set; single LLM annotator (no human second coder); coder precision moderate (micro-F1 ~0.44 on a 150-doc holdout scored three times); spam filter over-removes (precision ~39% on a 36-doc audit); Hinglish/vernacular under-coded; segment tags cover 2-12% of documents; stage evidence rests on explicit time cues only; no ground truth of 12-month retention. Details in `AI_EVIDENCE_LOG.md`.
+### How to interpret results
+
+- The research engine cannot know whether a generic app reviewer is a first-time mutual-fund SIP investor unless they explicitly say so.
+- Reports about F&O, share trading, IPOs or unrelated app usability must not be treated as SIP problems.
+- Positive vs negative star ratings do not mean continued vs stopped SIP.
+- Public-discussion frequencies describe *the collected sample* and not Groww's real retention or a representative distribution.
+- Personal identifiers from reviews are intentionally not stored, and emails/phones/PAN are redacted where identifiable by pattern. Manually verify any remaining PII before sending to AI or sharing publicly.
+- Reddit-derived text may have restrictions on onward redistribution and third-party AI processing. Check granted permissions before import and analysis.
+
+### Validated sample and API status
+
+The included `data/pilot_sources.json` contains two short, **manually transcribed source excerpts** from publicly visible Groww app pages, **not crawler output**. They only test the record structure and relevance logic. Neither a live Apple fetch nor a live Grok call has been executed by this package's author because runtime internet access and API credentials were unavailable at creation. See `tests/` for offline tests.
+
+### Evals and publication
+
+The human golden set should consist of ~20 distinct records. Compare AI vs human: relevance, theme, and behavior; include mismatch examples and corrected decisions. Record how many were missing or uncertain. Human approval is required before writing product insights and only publish rights-compliant excerpts with source links. The app is not yet publicly deployed. For mentor testing, deploy to Streamlit Community Cloud or a supported host, configure secrets server-side, and restrict paid actions to an administrator (e.g. behind sign-in) before sharing any public link.
+
+### Sources and docs
+
+- xAI: https://docs.x.ai/overview
+- Apple Groww: https://apps.apple.com/in/app/groww-stocks-mutual-fund-ipo/id1404871703
+- Google Play Groww: https://play.google.com/store/apps/details?id=com.nextbillion.groww
+- Google Play official developer review API (for apps with authorized developer account): https://developers.google.com/android-publisher/api-ref/rest/v3/reviews/list
+- Apple public feed format used: https://itunes.apple.com/in/rss/customerreviews/page=1/id=1404871703/sortby=mostrecent/json
+- Apify actor: https://apify.com/webdatatools/google-play-reviews-scraper
+- Reddit policy (2026): https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data
+
+## Research milestone sequence
+
+1. Collect a bounded, traceable sample (e.g. recent Apple reviews + permitted Play reviews + authorised forum records), with balanced ratings and sources.
+2. Deduplicate and filter SIP-relevant mentions. Record source and keyword denominators.
+3. Use Grok to extract behavioral claims, causes, unmet needs, certainty, explicit user-status, and exact supporting excerpts.
+4. Validate 20 manual labels and correct 2–3 model errors.
+5. Compare candidate opportunity areas across sources, alongside 5–6 real interviews, then select the problem and build the separate user-facing MVP.
