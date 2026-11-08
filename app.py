@@ -4,11 +4,11 @@ import os
 import pandas as pd
 import streamlit as st
 from pipeline import (apple_feed, play_apify, youtube_comments, read_import, dedupe,
-    analyze_with_grok, eval_gold, summary, to_csv_bytes, THEMES, BEHAVIORS, RELEVANCE)
+    analyze_with_openrouter, eval_gold, summary, to_csv_bytes, THEMES, BEHAVIORS, RELEVANCE)
 
 st.set_page_config(page_title='Groww SIP | AI Discovery Engine',page_icon='🔎',layout='wide')
 st.title('Groww SIP · AI Discovery Engine')
-st.caption('Research tool · Public voice-of-customer evidence · Grok-supported classification · Not investment advice')
+st.caption('Research tool · Public voice-of-customer evidence · OpenRouter-supported classification · Not investment advice')
 st.info('Research data ≠ Groww cohort analytics. Public reviews cannot establish actual 12-month SIP retention or investor status unless stated.')
 
 for key,default in [('records',[]),('analysis',[]),('gold',{}),('errors',[])]:
@@ -16,13 +16,24 @@ for key,default in [('records',[]),('analysis',[]),('gold',{}),('errors',[])]:
 
 with st.sidebar:
     st.header('Settings')
-    api_key=os.environ.get('XAI_API_KEY','') or st.text_input('xAI API key (session only)',type='password')
+    api_key=os.environ.get('OPENROUTER_API_KEY','')
+    try:
+        api_key=st.secrets.get('OPENROUTER_API_KEY',api_key)
+    except Exception:
+        pass
+    if not api_key:
+        api_key=st.text_input('OpenRouter API key (session only)',type='password')
     apify=os.environ.get('APIFY_TOKEN','') or st.text_input('Apify token (optional)',type='password')
     youtube_key=os.environ.get('YOUTUBE_API_KEY','') or st.text_input('YouTube API key (optional)',type='password')
-    model=st.text_input('Grok model',value=os.getenv('XAI_MODEL','grok-4.7'))
+    default_model=os.environ.get('OPENROUTER_MODEL','openrouter/free')
+    try:
+        default_model=st.secrets.get('OPENROUTER_MODEL',default_model)
+    except Exception:
+        pass
+    model=st.text_input('OpenRouter model',value=default_model)
     st.caption('Set secrets as environment variables on deployment; never commit API tokens.')
     st.metric('Collected unique records',len(st.session_state.records))
-    st.metric('Grok classifications',len(st.session_state.analysis))
+    st.metric('OpenRouter classifications',len(st.session_state.analysis))
     st.metric('Human gold labels',len(st.session_state.gold))
     st.divider()
     st.markdown('**Compliance**: Reddit/forum inputs must be separately authorized. This app does not bypass login, rate limits, or site restrictions.')
@@ -93,21 +104,21 @@ with collect:
         st.download_button('Download anonymized source records (CSV)',to_csv_bytes(st.session_state.records),'groww_source_records.csv','text/csv')
 
 with analyze:
-    st.subheader('Grok · Structured research extraction')
+    st.subheader('OpenRouter · Structured research extraction')
     st.write('The bot classifies records into evidence-backed themes. Missing information remains **unknown**. It never treats stock/F&O complaints as SIP discontinuation without direct evidence.')
     per_run=st.slider('Maximum records in this run (API calls / possible cost)',1,40,10)
     analyzed_ids={a['record_id'] for a in st.session_state.analysis}
     queue=[r for r in st.session_state.records if r['record_id'] not in analyzed_ids]
-    st.caption(f'{len(queue)} records awaiting Grok analysis. One API request per record.')
-    if st.button('Analyze next batch with Grok',disabled=not api_key or not queue):
-        with st.spinner('Analyzing public reviews through xAI API...'):
-            new=analyze_with_grok(queue[:per_run],api_key,model)
+    st.caption(f'{len(queue)} records awaiting OpenRouter analysis. One API request per record.')
+    if st.button('Analyze next batch with OpenRouter',disabled=not api_key or not queue):
+        with st.spinner('Analyzing public reviews through OpenRouter API...'):
+            new=analyze_with_openrouter(queue[:per_run],api_key,model)
         st.session_state.analysis+=new
         st.success(f'Processed {len(new)} items. Review low-confidence/abstained outputs before using findings.')
-    if not api_key:st.warning('No xAI API key configured. Source collection, imports and manual evaluation work, but Grok analysis is unavailable.')
+    if not api_key:st.warning('No OpenRouter API key configured. Source collection, imports and manual evaluation work, but AI analysis is unavailable.')
     if st.session_state.analysis:
         st.dataframe(pd.DataFrame(st.session_state.analysis),hide_index=True,use_container_width=True)
-        st.download_button('Download Grok classifications (CSV)',to_csv_bytes(st.session_state.analysis),'groww_grok_labels.csv','text/csv')
+        st.download_button('Download OpenRouter classifications (CSV)',to_csv_bytes(st.session_state.analysis),'groww_openrouter_labels.csv','text/csv')
 
 with evidence:
     st.subheader('Sourced opportunity signals')
@@ -116,12 +127,12 @@ with evidence:
         s=summary(st.session_state.records,st.session_state.analysis)
         a,b,c=st.columns(3)
         a.metric('Unique source records',s['records'])
-        b.metric('Grok-labelled SIP-relevant',s['sip_relevant'])
+        b.metric('AI-labelled SIP-relevant',s['sip_relevant'])
         c.metric('Sources represented',len(s['source_counts']))
         st.write('**Collection coverage** — these are sample counts, not Groww prevalence:')
         st.bar_chart(pd.Series(s['source_counts']))
         if s['theme_counts']:
-            st.write('**Observed themes within Grok-labelled SIP records**')
+            st.write('**Observed themes within AI-labelled SIP records**')
             st.bar_chart(pd.Series(s['theme_counts']))
         else:st.info('No SIP-relevant classifications yet; avoid inferring thematic prevalence.')
         st.warning('App reviews tend to overrepresent UX and support issues. Forums may overrepresent highly involved investors. Segments and 12-month cohorts cannot be inferred from counts.')
@@ -129,7 +140,7 @@ with evidence:
 
 with gold:
     st.subheader('Golden set: manual review')
-    st.write('Manually label approximately 20 **distinct source items** and compare with the Grok output. Record 2–3 AI corrections in the final Evidence Log.')
+    st.write('Manually label approximately 20 **distinct source items** and compare with the AI output. Record 2–3 AI corrections in the final Evidence Log.')
     if not st.session_state.records:st.info('Collect/import reviews first.')
     else:
         records=st.session_state.records

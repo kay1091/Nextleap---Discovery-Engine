@@ -53,3 +53,52 @@ def test_csv_formula_safe():
     from pipeline import to_csv_bytes
     out=to_csv_bytes([{'text':'=HYPERLINK("malicious")','source_url':'https://example.com'}]).decode('utf-8-sig')
     assert "'=HYPERLINK" in out
+
+
+def test_openrouter_sends_chat_completions_and_validates(monkeypatch):
+    from pipeline import analyze_with_openrouter, normal_record
+    record=normal_record('apple_app_store', 'https://example.com/a', '2026-10-01',
+                         'My SIP failed yesterday and I missed an instalment')
+    calls=[]
+    class Response:
+        ok=True
+        status_code=200
+        def json(self):
+            return {'choices':[{'message':{'content':json.dumps({
+                'relevance':'sip_relevant', 'theme':'payment_failure',
+                'sip_behavior':'missed','first_time_status':'unknown',
+                'groww_status':'confirmed',
+                'trigger':'payment failure', 'need':'retry help',
+                'evidence_excerpt':'My SIP failed yesterday',
+                'confidence':0.9,'needs_human_review':False,'review_reason':''
+            })},'finish_reason':'stop'}]}
+    def fake_post(url, **kwargs):
+        calls.append((url,kwargs))
+        return Response()
+    monkeypatch.setattr('pipeline.requests.post',fake_post)
+    output=analyze_with_openrouter([record],'dummy-key','openrouter/free')
+    assert len(output)==1 and output[0]['theme']=='payment_failure'
+    assert calls[0][0]=='https://openrouter.ai/api/v1/chat/completions'
+    assert calls[0][1]['json']['model']=='openrouter/free'
+    assert calls[0][1]['json']['messages'][0]['role']=='system'
+    assert calls[0][1]['headers']['Authorization']=='Bearer dummy-key'
+
+
+def test_openrouter_empty_or_http_error_abstains(monkeypatch):
+    from pipeline import analyze_with_openrouter, normal_record
+    rec=normal_record('apple_app_store', 'https://example.com/a', '2026-10-01','My SIP failed')
+    class EmptyResponse:
+        ok=True
+        status_code=200
+        def json(self): return {'choices':[{'message':{'content':''}, 'finish_reason':'length'}]}
+    monkeypatch.setattr('pipeline.requests.post',lambda *a,**kw: EmptyResponse())
+    out=analyze_with_openrouter([rec],'test')
+    assert out[0]['needs_human_review'] is True
+    assert out[0]['relevance']=='uncertain'
+    assert 'token limit' in out[0]['review_reason']
+    class ErrorResponse:
+        ok=False
+        status_code=429
+    monkeypatch.setattr('pipeline.requests.post',lambda *a,**kw: ErrorResponse())
+    out=analyze_with_openrouter([rec],'test')
+    assert out[0]['relevance']=='uncertain' and 'HTTP 429' in out[0]['review_reason']
