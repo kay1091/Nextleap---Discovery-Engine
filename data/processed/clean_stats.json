@@ -1,0 +1,1 @@
+[["raw records loaded", 114230], ["after dedupe by (source,id)", 108232], ["after dedupe by normalised text within source/product", 97298], ["SIP-journey core (explicit SIP/mandate/instalment talk, non-spam)", 19061], ["unique docs", 97298], ["flagged spam/low-signal", 6217], ["SIP/MF-relevant & non-spam", 36343]]

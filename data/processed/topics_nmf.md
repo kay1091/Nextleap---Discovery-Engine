@@ -1,0 +1,22 @@
+# NMF topics (TF-IDF; auto-generated)
+
+- topic 0 (n=447): app, good, easy, investment, use, user, using, great, like, groww, option, good app
+- topic 1 (n=1147): cap, small, small cap, mid, cap fund, flexi, mid cap, large, flexi cap, large cap, fund, quant
+- topic 2 (n=1975): mutual fund, fund, mutual, best, fund sip, fund investment, sir, best mutual, sip mutual, fund investments, bro, fund portfolio
+- topic 3 (n=1235): sip, month, lumpsum, monthly, monthly sip, investment, start sip, sip month, stop, fund sip, sip investment, sip lumpsum
+- topic 4 (n=1638): funds, mutual funds, mutual, funds sip, index funds, investing mutual, best, invest mutual, sip mutual, direct mutual, etfs, funds invest
+- topic 5 (n=937): hai, se, ke, ki, ka, sir, bhi, ho, kar, kya, aur, nahi
+- topic 6 (n=922): years, year, returns, tax, fd, return, invested, equity, debt, investment, income, risk
+- topic 7 (n=705): index, index fund, nifty, fund, nifty index, index funds, etf, uti, funds, midcap, uti nifty, sip index
+- topic 8 (n=741): video, make, make video, sir, thank, nps, sir make, thanks, videos, best, video nps, vs
+- topic 9 (n=1524): money, customer, support, paytm, days, customer support, paytm money, issue, service, et, et money, care
+- topic 10 (n=884): invest, want, want invest, invest mutual, invest sip, invest month, sip invest, month, suggest, money, fund invest, bro
+- topic 11 (n=335): direct, plan, regular, growth, direct plan, fund direct, direct growth, regular plan, fund, direct mutual, plan growth, regular direct
+- topic 12 (n=333): ratio, expense, expense ratio, nav, etf, low, etfs, high, low expense, gold, returns, ratios
+- topic 13 (n=649): stocks, buy, stocks mutual, groww, trading, etf, sip stocks, stock, buying, funds stocks, sell, etfs
+- topic 14 (n=1272): investing, start, started, just, start investing, start sip, started investing, month, want, videos, want start, sips
+- topic 15 (n=1096): account, bank, zerodha, bank account, coin, demat, groww, amc, mandate, charges, option, demat account
+- topic 16 (n=1047): market, stock, stock market, time, price, share, buy, trading, time market, like, markets, just
+- topic 17 (n=724): term, long, long term, short, short term, investment, term investment, good, goals, wealth, insurance, equity
+- topic 18 (n=1133): mf, mf sip, coin, mf portfolio, direct mf, invest mf, sip mf, mf investment, etf, units, investing mf, mf investments
+- topic 19 (n=1254): portfolio, update, external, showing, add, external portfolio, feature, track, option, new, value, xirr
