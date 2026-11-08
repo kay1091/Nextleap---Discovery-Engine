@@ -10,8 +10,9 @@
 4. Run `streamlit run app.py`.
 5. Use the **Collect** tab to fetch limited Apple India public RSS reviews or authorized imports. Load the two **manually sourced pilot excerpts** to test the data interface offline. If your Apify plan/source terms permit, configure and trigger the optional Google Play connector.
 6. Use **Analyze** to send selected source records through the OpenRouter API (one request per record; costs and rate limits depend on the selected model).
-7. Under **Human evaluation**, label ~20 items without looking at AI output first; compare exact-match accuracy and log 2–3 corrections. Download the outputs; hosted Streamlit session state isn't durable.
-8. Open **Evidence & themes** to compare tagged feedback by source; avoid interpreting these percentages as Groww's user retention rates.
+7. Set `DISCOVERY_ADMIN_PASSWORD` in Streamlit Secrets before deploying. Enter that passcode in the sidebar to enable collection, imports, human labeling and API requests. Without it, the app intentionally remains read-only.
+8. Under **Human evaluation**, label ~20 source-stratified, seeded items before viewing AI labels. Compare confusion matrices, agreement and Cohen's kappa; log 2–3 genuine corrections. Export source, AI and human CSVs regularly. Use **Restore previous CSV exports** in the sidebar after a restart; restoration is manual, not a durable database.
+9. Open **Evidence & themes** to compare accepted high-confidence themes by source, inspect source-linked quotes and compare rating distribution. Counts are from this collected sample, not Groww retention rates.
 
 ### Source coverage, restrictions and what is NOT provided
 
@@ -37,7 +38,7 @@
 
 ### Validated sample and API status
 
-The included `data/pilot_sources.json` contains two short, **manually transcribed source excerpts** from publicly visible Groww app pages, **not crawler output**. They only test the record structure and relevance logic. Neither a live Apple fetch nor a live OpenRouter call has been executed by this package's author because runtime internet access and API credentials were unavailable at creation. See `tests/` for offline tests.
+The included `data/pilot_sources.json` contains two short, **manually transcribed source excerpts** from publicly visible Groww app pages, **not crawler output**. They only test the record structure and relevance logic. The repository now has offline regression tests for Apple review-link parsing (synthetic fixture based on the documented structure), API-error redaction, CSV restore and AI validation. A captured, live Apple payload is **not** yet included; live end-to-end validation and a verified OpenRouter smoke result remain pending. See `tests/` and GitHub Actions for automated checks.
 
 ### Evals and publication
 
@@ -69,6 +70,7 @@ In App Settings > Secrets enter:
 ```toml
 OPENROUTER_API_KEY = "your_actual_openrouter_key"
 OPENROUTER_MODEL = "openrouter/free"
+DISCOVERY_ADMIN_PASSWORD = "choose_a_strong_unique_passcode"
 ```
 
 No xAI key is needed. The original optional Apify and YouTube API features remain available; supply
@@ -81,3 +83,35 @@ Only xAI/Grok AI classification has been replaced with OpenRouter.
 For a public deployment, remember that visitors may trigger API calls using the configured OpenRouter
 key. Free-model limits are finite, and model/provider outputs may differ between runs.
 Consider restricting paid actions before public sharing.
+
+
+## Security and research-quality updates (8 November 2026)
+
+- Privileged actions are locked until a server-side `DISCOVERY_ADMIN_PASSWORD` is set and provided through the sidebar. This is a basic demo passcode, **not** strong user authentication. Do not distribute the passcode with the public link.
+- Each session has a maximum of 30 AI calls. **This is not a global rate limit**; keep the key restricted to a low-spend team budget and consider provider-side limits.
+- Apple reviews use source links from the RSS entry. Missing per-review links are skipped rather than replaced with generic app URLs. Live feed shape must still be checked.
+- Collector errors shown to visitors are generic or status-only; never display query strings, request headers, or API tokens. The Apify connector uses a Bearer header. YouTube's documented API still sends `key=` in its request but failure URLs are not displayed.
+- Both successful AI labels and abstentions can be exported. Transient HTTP 429/5xx, timeout and empty-output rows can be removed from the completion queue with **Retry abstained API requests** and analyzed again.
+- Data exists only in Streamlit session state. Export and manually restore the **source**, **analysis**, and **gold** CSVs after a reload; there is no server-side persistence database. CSV exports prefix formula-looking spreadsheet cells with an apostrophe, which can affect round-tripping of raw free-text values.
+- A case-insensitive SIP keyword prefilter reduces unnecessary AI calls; the dashboard reports both included and unmatched source counts. This filter is not a substitute for relevance labeling and may miss genuine non-keyword cases.
+- Manual labels are selected in a stable source-interleaved hashed order, with AI findings hidden until 20 human labels are saved. This is a source-stratified convenience sampler, not a representative randomized investor sample.
+- Agreement, confusion matrices and Cohen's kappa are exploratory with n≈20 and should not be portrayed as representative model validity. The router `openrouter/free` may use multiple models; actual model identifiers are logged for new classifications where supplied by the API.
+- AI theme summaries exclude low-confidence and human-review flagged entries. The `other` bucket and first-time-status uncertainty remain explicit limitations.
+- Do not send restricted Reddit/forum records, financial account identifiers or personal data to a free model without checking third-party provider processing permissions; the app's redaction filters are incomplete by nature. Authorizing the import alone does **not** grant permission for external AI transmission.
+- Apify actor input and data rights remain unverified, and Apple review collection may be restricted by platform rules. The administrator must review compliance independently before using live collectors.
+
+### Running tests
+
+```bash
+python -m pip install -r requirements.txt -r requirements-dev.txt
+python -m compileall -q app.py pipeline.py tests
+python -m pytest -q
+```
+
+### Live smoke test still required
+
+1. Set the administrator passcode and OpenRouter key in Streamlit Secrets, then reboot.
+2. Fetch one permitted Apple review page; confirm source links navigate to the corresponding review (not just the generic app page). If the collection is disallowed, skip it rather than bypassing access controls.
+3. Load pilot examples, run one OpenRouter classification, record the actual model and validation outcome.
+4. Label one source manually, export the three CSVs, reload, restore them and verify counts.
+5. Test an artificial 429/mock response via offline tests and a real rate-limit event only if it occurs naturally. Do not manufacture evidence.
