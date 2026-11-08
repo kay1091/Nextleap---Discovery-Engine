@@ -441,9 +441,13 @@ def analyze_with_openrouter(records, api_key, model='openrouter/free'):
             message = choices[0].get('message')
             raw = message.get('content') if isinstance(message, dict) else None
             if not isinstance(raw, str) or not raw.strip():
+                finish = choices[0].get('finish_reason', 'unknown')
+                reason = ('OpenRouter output token limit reached; abstain.'
+                          if finish == 'length'
+                          else 'OpenRouter returned empty classification; abstain.')
                 outputs.append(empty_analysis(
-                    record, 'OpenRouter returned empty classification; abstain.',
-                    retryable=True, model_requested=model, model_used=actual_model
+                    record, reason, retryable=True,
+                    model_requested=model, model_used=actual_model
                 ))
                 continue
             obj = parse_model_json(raw)
