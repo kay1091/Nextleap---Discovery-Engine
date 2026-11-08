@@ -1,65 +1,62 @@
-# Groww SIP — AI Discovery Engine (OpenRouter-only)
+# Groww SIP — Grok AI Discovery Engine (v0.1)
 
-A student product-discovery research prototype. This is **not** Groww cohort analytics, financial advice, a validated claim about SIP retention, or a representative survey of investors.
+**Purpose**: Extract, trace and analyze publicly available feedback that may reveal why first-time Indian mutual-fund SIP investors continue, pause or stop. Designed for the Product Management assignment due **9 Nov 2026**. It is a research tool, not investment advice.
 
 ## Run locally
 
-```bash
-python -m pip install -r requirements.txt
-streamlit run app.py
-```
+1. Install Python 3.10+.
+2. In this folder run `python -m pip install -r requirements.txt`.
+3. Set `XAI_API_KEY` in your environment (see `.env.example`); optionally set `APIFY_TOKEN` or `YOUTUBE_API_KEY`.
+4. Run `streamlit run app.py`.
+5. Use the **Collect** tab to fetch limited Apple India public RSS reviews or authorized imports. Load the two **manually sourced pilot excerpts** to test the data interface offline. If your Apify plan/source terms permit, configure and trigger the optional Google Play connector.
+6. Use **Analyze** to send selected source records through the Grok API (one paid API call per record).
+7. Under **Human evaluation**, label ~20 items without looking at AI output first; compare exact-match accuracy and log 2–3 corrections. Download the outputs; hosted Streamlit session state isn't durable.
+8. Open **Evidence & themes** to compare tagged feedback by source; avoid interpreting these percentages as Groww's user retention rates.
 
-In Streamlit Community Cloud, use **App → Settings → Secrets**:
+### Source coverage, restrictions and what is NOT provided
 
-```toml
-OPENROUTER_API_KEY = "your_real_key"
-OPENROUTER_MODEL = "openrouter/free"
-# Optional for public apps: restrict API usage
-DISCOVERY_ADMIN_PASSWORD = "a_strong_private_password"
-```
+| Source | Collection method | Status / caveats |
+|---|---|---|
+| Groww Apple App Store (India) | Apple public review RSS; recent pages | Implemented, needs network connection at run time; feed is capped/limited |
+| Groww Google Play (India) | Third-party Apify Actor (`webdatatools/google-play-reviews-scraper`) | Implemented optionally; verify the provider's collection method, Google terms, charges and availability yourself; not an official Google API |
+| Reddit | Import only with appropriate research authorization | No Reddit crawler. As of May 2026 Reddit says academic research requires Reddit For Researchers program; no unauthenticated/bulk scraping |
+| TradingQ&A / forums | Authorised source-linked CSV/JSON import | Not an indiscriminate site crawler; check license, robots, and terms |
+| YouTube comments | Official YouTube Data API for selected video IDs; authorised export import | Implemented, needs API key and quota; top-level comments only by default |
+| User interviews / survey | Anonymized authorized import | Keep separate from public reviews, do not include emails, PAN, account numbers |
 
-Only the OpenRouter API key is needed for AI calls. The optional admin password is **not** a second API provider. Do not commit API keys to GitHub or enter them into public text fields. `openrouter/free` routes among different free models and may have rate limits, variable behavior or reasoning-only empty responses. For reproducible evaluation, choose a fixed available OpenRouter model and record its actual ID with the output. The app safely abstains if the API fails or returns invalid JSON; it does not manufacture classifications.
+**You cannot guarantee all historical reviews.** On-platform access limitations and terms apply. Source dates, language, region, sort order, missing pages and sample volumes must be recorded.
 
-## Streamlit Community Cloud deployment
+### How to interpret results
 
-1. Make a new **public** GitHub repository (separate from the SIP Performance Explainer).
-2. Upload **the contents of this folder** (`app.py`, `pipeline.py`, `requirements.txt`, `data/`, `tests/`, README), not only the ZIP. Do not upload `.env` or `.streamlit/secrets.toml` containing credentials.
-3. In Streamlit Community Cloud, choose your repository, its default branch (normally `main`) and main file `app.py`.
-4. Deploy and add `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` under Secrets. Optionally add `DISCOVERY_ADMIN_PASSWORD` to protect paid AI calls.
-5. Load the two demonstration excerpts under **Collect**, then use **Analyze** with your key. If the app shows `abstained`, do not report that as a successful AI label.
-6. Use **Human evaluation** to manually label real, authorized source records and export joined evaluation evidence.
+- The research engine cannot know whether a generic app reviewer is a first-time mutual-fund SIP investor unless they explicitly say so.
+- Reports about F&O, share trading, IPOs or unrelated app usability must not be treated as SIP problems.
+- Positive vs negative star ratings do not mean continued vs stopped SIP.
+- Public-discussion frequencies describe *the collected sample* and not Groww's real retention or a representative distribution.
+- Personal identifiers from reviews are intentionally not stored, and emails/phones/PAN are redacted where identifiable by pattern. Manually verify any remaining PII before sending to AI or sharing publicly.
+- Reddit-derived text may have restrictions on onward redistribution and third-party AI processing. Check granted permissions before import and analysis.
 
-**Public access and costs:** If you deploy with an unrestricted key and no admin password, any visitor may trigger model calls and consume your available credits/quota. To restrict calls, set `DISCOVERY_ADMIN_PASSWORD` and keep it private; reviewers can still view the research interface, load samples and review existing imported data, but cannot run live model calls without the password. Streamlit's session state is not durable or shared across visitors.
+### Validated sample and API status
 
-## Features
+The included `data/pilot_sources.json` contains two short, **manually transcribed source excerpts** from publicly visible Groww app pages, **not crawler output**. They only test the record structure and relevance logic. Neither a live Apple fetch nor a live Grok call has been executed by this package's author because runtime internet access and API credentials were unavailable at creation. See `tests/` for offline tests.
 
-- **Collect:** import authorized CSV/JSON excerpts with `text`, `source_url`, and `source_date`; two demonstration examples included.
-- **Analyze:** send selected excerpts through OpenRouter for structured classification. AI output is checked against allowed label lists and source text.
-- **Evidence & themes:** counts and sample theme distributions (not population estimates).
-- **Human evaluation:** record independently human-labelled relevance, themes and observed behavior; inspect exact-match comparison and export CSV files.
+### Evals and publication
 
-## Source policy
+The human golden set should consist of ~20 distinct records. Compare AI vs human: relevance, theme, and behavior; include mismatch examples and corrected decisions. Record how many were missing or uncertain. Human approval is required before writing product insights and only publish rights-compliant excerpts with source links. The app is not yet publicly deployed. For mentor testing, deploy to Streamlit Community Cloud or a supported host, configure secrets server-side, and restrict paid actions to an administrator (e.g. behind sign-in) before sharing any public link.
 
-No live Apify, Google Play scraping, YouTube Data API, Reddit crawler, or xAI/Grok integration. The only AI API provider is OpenRouter. Exports from these sources may be imported *only when the user has the appropriate processing and redistribution permissions*. Automated collection was intentionally removed to avoid claiming source rights or permissions we cannot verify. If data contain personal identifiers, remove them before upload; the pipeline only redacts common patterns and is not sufficient for full anonymization. The two bundled excerpts are illustrative examples and **not** validated research evidence.
+### Sources and docs
 
-## Limits and evaluation
+- xAI: https://docs.x.ai/overview
+- Apple Groww: https://apps.apple.com/in/app/groww-stocks-mutual-fund-ipo/id1404871703
+- Google Play Groww: https://play.google.com/store/apps/details?id=com.nextbillion.groww
+- Google Play official developer review API (for apps with authorized developer account): https://developers.google.com/android-publisher/api-ref/rest/v3/reviews/list
+- Apple public feed format used: https://itunes.apple.com/in/rss/customerreviews/page=1/id=1404871703/sortby=mostrecent/json
+- Apify actor: https://apify.com/webdatatools/google-play-reviews-scraper
+- Reddit policy (2026): https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data
 
-- SIP relevance and first-time investor status cannot be inferred from a generic review, a rating or a download count.
-- The AI must include an exact short quote present in the supplied excerpt; unsupported claims should be marked for human review.
-- A classification `abstained` due to API failure or empty output must not count as a verified label.
-- Human golden set: label approximately 20 distinct items independently, include corrected cases, and report agreement/missing outputs honestly.
-- Findings describe this collected/authorized sample only, not the fraction of Groww users who stop SIPs or actual 12-month retention.
-- Downloads are generated per browser session and need to be saved separately as evidence.
+## Research milestone sequence
 
-## Offline checks
-
-```bash
-python -m compileall -q app.py pipeline.py tests
-python -m pytest -q tests
-```
-
-`pytest` is optional for developers and is not needed to run the Streamlit app.
-
-## Reference
-
-OpenRouter Chat Completions API: https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request
+1. Collect a bounded, traceable sample (e.g. recent Apple reviews + permitted Play reviews + authorised forum records), with balanced ratings and sources.
+2. Deduplicate and filter SIP-relevant mentions. Record source and keyword denominators.
+3. Use Grok to extract behavioral claims, causes, unmet needs, certainty, explicit user-status, and exact supporting excerpts.
+4. Validate 20 manual labels and correct 2–3 model errors.
+5. Compare candidate opportunity areas across sources, alongside 5–6 real interviews, then select the problem and build the separate user-facing MVP.
