@@ -27,21 +27,28 @@ USER_STATUS = ['confirmed', 'unknown', 'not_confirmed']
 
 
 def privacy_clean(text):
-    """Redact simple PII patterns; humans must still review for other identifiers."""
+    """Redact common sensitive values; manual PII review remains necessary."""
     text = str(text or '').strip()
     text = re.sub(r'(?i)\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b', '[REDACTED_EMAIL]', text)
-    text = re.sub(r'(?<!\d)(?:\+91[ -]?)?[6-9]\d{9}(?!\d)', '[REDACTED_PHONE]', text)
+    text = re.sub(r'(?i)\b[a-z0-9._-]{2,}@(okhdfc|okhdfcbank|oksbi|okicici|okaxis|ybl|ibl|axl|paytm|upi|apl)\b', '[REDACTED_UPI]', text)
+    text = re.sub(r'(?<!\d)(?:\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?!\d)', '[REDACTED_PHONE]', text)
+    text = re.sub(r'(?<!\d)\d{4}[\s-]?\d{4}[\s-]?\d{4}(?!\d)', '[REDACTED_12_DIGITS]', text)
     text = re.sub(r'(?i)\b[A-Z]{5}[0-9]{4}[A-Z]\b', '[REDACTED_PAN]', text)
+    text = re.sub(r'(?i)\b(folio|demat|bo\s?id)\s*(?:no\.?|number|:|#|-)?\s*[A-Z0-9][A-Z0-9 -]{7,17}\b', r'\1 [REDACTED_ID]', text)
     return text
-
 
 def normal_record(source, url, when, text, rating=None, record_key=None, method='import', scope='unknown'):
     clean = privacy_clean(text)
     if not clean:
         return None
-    # Separate records with same text if origin IDs differ; dedup will merge identical cross-posts.
-    canonical_key = str(record_key or url + '|' + clean)
-    record_id = hashlib.sha256((source + '|' + canonical_key).encode('utf-8')).hexdigest()[:16]
+    key = str(record_key or (str(url) + '|' + clean))
+    record_id = hashlib.sha256((source + '|' + key).encode('utf-8')).hexdigest()[:16]
+    try:
+        rating = int(float(rating)) if rating not in (None, '') else None
+        if rating is not None and not 1 <= rating <= 5:
+            rating = None
+    except (ValueError, TypeError):
+        rating = None
     return {
         'record_id': record_id, 'source': source, 'source_url': str(url or ''),
         'source_date': str(when or ''), 'text': clean, 'rating': rating,
@@ -49,134 +56,198 @@ def normal_record(source, url, when, text, rating=None, record_key=None, method=
         'collected_at': datetime.now(timezone.utc).isoformat(timespec='seconds')
     }
 
-
 def dedupe(records):
-    out, seen_ids, seen_text = [], set(), set()
-    for r in records:
-        if not r or not r.get('text'):
+    """Preserve distinct review IDs even if different users wrote identical text."""
+    out, seen_ids = [], set()
+    for row in records:
+        if not isinstance(row, dict) or not row.get('text'):
             continue
-        digest = hashlib.sha256(re.sub(r'\s+', ' ', r['text'].lower()).encode()).hexdigest()
-        if r['record_id'] in seen_ids or digest in seen_text:
+        rid = row.get('record_id')
+        if not rid or rid in seen_ids:
             continue
-        seen_ids.add(r['record_id']); seen_text.add(digest)
-        out.append(r)
+        seen_ids.add(rid)
+        out.append(row)
     return out
 
 
+def checked_response(response, provider):
+    """Avoid leaking secret-bearing request URLs via requests.HTTPError."""
+    code = getattr(response, 'status_code', 0)
+    if not 200 <= code < 300:
+        raise RuntimeError(f'{provider} failed (HTTP {code})')
+    return response
+
 def apple_feed(session=None, pages=1, country='in', sleep_seconds=0.8):
-    """Public Apple iTunes customer review RSS. It can return fewer than requested; not all historical reviews."""
+    """Bounded RSS sample; only retain entries with traceable per-review links."""
     session = session or requests.Session()
     out = []
-    pages = max(1, min(int(pages), 10))
-    for page in range(1, pages + 1):
+    for page in range(1, max(1, min(int(pages), 10)) + 1):
         url = f'https://itunes.apple.com/{country}/rss/customerreviews/page={page}/id={APPLE_ID}/sortby=mostrecent/json'
-        res = session.get(url, timeout=25, headers={'User-Agent': 'Groww-SIP-Academic-Discovery/0.1 (+research)'})
-        if res.status_code in (403, 429):
-            raise RuntimeError(f'Apple feed declined request (HTTP {res.status_code}); stop and try later.')
+        try:
+            res = session.get(url, timeout=25, headers={'User-Agent': 'Groww-SIP-Academic-Discovery/0.1'})
+        except requests.RequestException:
+            raise RuntimeError('Apple feed network error') from None
         if res.status_code in (404, 410):
             break
-        res.raise_for_status()
-        blob = res.json()
-        feed = blob.get('feed') or {}
+        checked_response(res, 'Apple feed')
+        feed = (res.json() or {}).get('feed') or {}
         items = feed.get('entry') or []
-        if isinstance(items, dict): items = [items]
+        if isinstance(items, dict):
+            items = [items]
         count = 0
         for entry in items:
-            if 'im:rating' not in entry:  # metadata row, not a review
+            if not isinstance(entry, dict) or 'im:rating' not in entry:
                 continue
-            text = (entry.get('content') or {}).get('label', '')
-            title = (entry.get('title') or {}).get('label', '')
-            review_id = (entry.get('id') or {}).get('label', '')
-            when = (entry.get('updated') or {}).get('label', '')
-            rating = (entry.get('im:rating') or {}).get('label', None)
-            item_url = review_id if review_id.startswith('https://') else f'https://apps.apple.com/in/app/id{APPLE_ID}'
-            record = normal_record('apple_app_store', item_url, when, f'{title}. {text}'.strip(),
-                int(rating) if str(rating).isdigit() else None,
-                record_key=f'apple:{review_id}', method='apple_public_rss', scope=f'{country}:most_recent')
+            review_id = str((entry.get('id') or {}).get('label') or '')
+            link = entry.get('link') or {}
+            if isinstance(link, list):
+                link = next((v for v in link if isinstance(v, dict) and
+                             (v.get('attributes') or {}).get('href')), {})
+            item_url = str((link.get('attributes') or {}).get('href') or '')
+            if not item_url.startswith(('https://', 'http://')):
+                continue  # Never substitute the generic app page.
+            title = str((entry.get('title') or {}).get('label') or '')
+            body = str((entry.get('content') or {}).get('label') or '')
+            record = normal_record('apple_app_store', item_url,
+                (entry.get('updated') or {}).get('label', ''),
+                f'{title}. {body}'.strip(), (entry.get('im:rating') or {}).get('label'),
+                record_key=f'apple:{review_id or item_url}', method='apple_public_rss',
+                scope=f'{country}:most_recent')
             if record:
-                out.append(record); count += 1
-        if count == 0: break
-        if page < pages: time.sleep(sleep_seconds)
+                out.append(record)
+                count += 1
+        if not count:
+            break
+        if page < pages:
+            time.sleep(sleep_seconds)
     return dedupe(out)
-
 
 def play_apify(token, max_reviews=100, country='in', lang='en'):
-    """Third-party Apify connector; users must verify use aligns with platform terms and costs."""
+    """Optional third-party collector; source/actor terms require verification."""
     if not token:
-        raise ValueError('APIFY_TOKEN required.')
-    endpoint='https://api.apify.com/v2/acts/webdatatools~google-play-reviews-scraper/run-sync-get-dataset-items'
-    payload={'appIds':[PLAY_ID], 'maxReviews':min(max(int(max_reviews),1),500),
-             'sort':'newest', 'ratings':[], 'lang':lang,'country':country}
-    res = requests.post(endpoint, params={'token':token, 'timeout':120},
-                        json=payload, timeout=145)
-    res.raise_for_status()
-    items=res.json()
-    if not isinstance(items, list): raise ValueError('Unexpected Apify response.')
-    out=[]
+        raise ValueError('Apify token required')
+    endpoint = 'https://api.apify.com/v2/acts/webdatatools~google-play-reviews-scraper/run-sync-get-dataset-items'
+    payload = {'appIds': [PLAY_ID], 'maxReviews': min(max(int(max_reviews), 1), 500),
+               'sort': 'newest', 'ratings': [], 'lang': lang, 'country': country}
+    try:
+        res = requests.post(endpoint, params={'timeout': 60},
+            headers={'Authorization': f'Bearer {token}'}, json=payload, timeout=75)
+    except requests.RequestException:
+        raise RuntimeError('Apify network error') from None
+    checked_response(res, 'Apify')
+    items = res.json()
+    if not isinstance(items, list):
+        raise ValueError('Unexpected Apify response')
+    out = []
     for item in items:
-        key=item.get('reviewId') or None
-        record=normal_record('google_play', f'https://play.google.com/store/apps/details?id={PLAY_ID}',
-           item.get('date'), item.get('text'), item.get('rating'), record_key=key,
-           method='third_party_apify', scope=f'{country}:{lang}:newest')
-        if record: out.append(record)
+        if not isinstance(item, dict):
+            continue
+        record = normal_record('google_play',
+            f'https://play.google.com/store/apps/details?id={PLAY_ID}',
+            item.get('date'), item.get('text'), item.get('rating'),
+            record_key=item.get('reviewId') or item.get('id'),
+            method='third_party_apify', scope=f'{country}:{lang}:newest')
+        if record:
+            out.append(record)
     return dedupe(out)
 
-
 def youtube_comments(api_key, video_id, pages=2):
-    """YouTube Data API v3 top-level comments for a user-selected public finance video.
-    Does not retrieve every reply. Requires YouTube API quota and valid key.
-    """
-    if not api_key: raise ValueError('YOUTUBE_API_KEY required.')
-    video_id=str(video_id).strip()
-    if not re.fullmatch(r'[A-Za-z0-9_-]{11}',video_id):
-        raise ValueError('Provide an 11-character YouTube video ID.')
-    out=[]; token=None
-    for _ in range(max(1,min(int(pages),5))):
-        params={'key':api_key,'part':'snippet','videoId':video_id,
-                'maxResults':100,'order':'time','textFormat':'plainText'}
-        if token:params['pageToken']=token
-        response=requests.get('https://www.googleapis.com/youtube/v3/commentThreads',
-                              params=params,timeout=25)
-        response.raise_for_status()
-        payload=response.json()
-        for thread in payload.get('items',[]):
-            comment=thread.get('snippet',{}).get('topLevelComment',{})
-            snippet=comment.get('snippet',{})
-            cid=comment.get('id','')
-            url=f'https://www.youtube.com/watch?v={video_id}&lc={cid}'
-            record=normal_record('youtube',url,snippet.get('publishedAt'),
-                snippet.get('textOriginal') or snippet.get('textDisplay',''),
-                None,record_key=f'youtube:{cid}',method='youtube_data_api',
+    """Official YouTube Data API; prevents credential-bearing errors reaching UI."""
+    if not api_key:
+        raise ValueError('YouTube API key required')
+    video_id = str(video_id).strip()
+    if not re.fullmatch(r'[A-Za-z0-9_-]{11}', video_id):
+        raise ValueError('Provide an 11-character YouTube video ID')
+    out, page_token = [], None
+    for _ in range(max(1, min(int(pages), 5))):
+        params = {'key': api_key, 'part': 'snippet', 'videoId': video_id,
+                  'maxResults': 100, 'order': 'time', 'textFormat': 'plainText'}
+        if page_token:
+            params['pageToken'] = page_token
+        try:
+            response = requests.get('https://www.googleapis.com/youtube/v3/commentThreads',
+                                    params=params, timeout=25)
+        except requests.RequestException:
+            raise RuntimeError('YouTube network error') from None
+        # YouTube Data API documents key=; never show the resulting URL to users.
+        checked_response(response, 'YouTube')
+        payload = response.json()
+        for thread in payload.get('items', []):
+            comment = thread.get('snippet', {}).get('topLevelComment', {})
+            snippet = comment.get('snippet', {})
+            cid = comment.get('id', '')
+            record = normal_record('youtube',
+                f'https://www.youtube.com/watch?v={video_id}&lc={cid}',
+                snippet.get('publishedAt'),
+                snippet.get('textOriginal') or snippet.get('textDisplay', ''),
+                record_key=f'youtube:{cid}', method='youtube_data_api',
                 scope=f'video:{video_id}:recent_top_level')
-            if record:out.append(record)
-        token=payload.get('nextPageToken')
-        if not token:break
+            if record:
+                out.append(record)
+        page_token = payload.get('nextPageToken')
+        if not page_token:
+            break
     return dedupe(out)
 
 def read_import(content, filename='import.csv', source='authorized_import'):
-    """Import authorized public data with columns text, source_url, source_date, rating.
-    Deliberately does not crawl Reddit: academic use requires Reddit For Researchers approval.
-    """
-    rows=[]
-    data=content.decode('utf-8-sig') if isinstance(content,bytes) else str(content)
+    """Parse authorized linked imports; stable IDs survive row reordering."""
+    data = content.decode('utf-8-sig') if isinstance(content, bytes) else str(content)
     if filename.lower().endswith('.json'):
-        rows=json.loads(data)
-        if not isinstance(rows,list): raise ValueError('JSON import needs an array.')
+        rows = json.loads(data)
+        if not isinstance(rows, list):
+            raise ValueError('JSON input must be an array')
     else:
-        rows=list(csv.DictReader(io.StringIO(data)))
-    out=[]
-    for i,row in enumerate(rows):
-        url=row.get('source_url') or row.get('url') or ''
-        if not url.startswith('https://') and not url.startswith('http://'):
-            # No source = no verifiable evidence, so drop rather than invent a link.
+        rows = list(csv.DictReader(io.StringIO(data)))
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
             continue
-        item=normal_record(source, url, row.get('source_date') or row.get('date'),
-            row.get('text') or row.get('review') or row.get('content'),
-            row.get('rating'), row.get('record_id') or f'{url}:{i}',
+        url = row.get('source_url') or row.get('url') or ''
+        if not isinstance(url, str):
+            continue
+        url = url.strip()
+        parsed = urlparse(url)
+        if parsed.scheme not in ('https', 'http') or not parsed.netloc:
+            continue
+        body = row.get('text') or row.get('review') or row.get('content')
+        stable_id = row.get('record_id') or (url + '|' + str(body or ''))
+        record = normal_record(source, url, row.get('source_date') or row.get('date'),
+            body, row.get('rating'), record_key=stable_id,
             method='authorized_import', scope='imported_user_documented')
-        if item:out.append(item)
+        if record:
+            out.append(record)
     return dedupe(out)
 
+
+def load_export_csv(content, kind):
+    """Restore downloaded source, AI or human-label CSVs."""
+    if kind not in ('source', 'analysis', 'gold'):
+        raise ValueError('Invalid restore type')
+    data = content.decode('utf-8-sig') if isinstance(content, bytes) else str(content)
+    out = []
+    for row in csv.DictReader(io.StringIO(data)):
+        if not row.get('record_id'):
+            continue
+        if kind == 'source':
+            if not row.get('text') or not row.get('source_url'):
+                continue
+            row['text'] = privacy_clean(row['text'])
+            try:
+                value = int(float(row['rating'])) if row.get('rating') else None
+                row['rating'] = value if value is not None and 1 <= value <= 5 else None
+            except (TypeError, ValueError):
+                row['rating'] = None
+        if kind == 'analysis':
+            try:
+                row['confidence'] = float(row.get('confidence') or 0)
+            except (TypeError, ValueError):
+                row['confidence'] = 0.0
+            row['needs_human_review'] = str(row.get('needs_human_review', 'true')).lower() in ('true', '1', 'yes')
+            row['retryable'] = str(row.get('retryable', 'false')).lower() in ('true', '1', 'yes')
+        if kind == 'gold':
+            row['note'] = privacy_clean(row.get('note') or '')
+        out.append(row)
+    return out
 
 def empty_analysis(r, why):
     return {'record_id':r['record_id'],'relevance':'uncertain','theme':'other',
