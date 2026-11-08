@@ -249,43 +249,132 @@ def load_export_csv(content, kind):
         out.append(row)
     return out
 
-def empty_analysis(r, why):
-    return {'record_id':r['record_id'],'relevance':'uncertain','theme':'other',
-        'sip_behavior':'unknown','first_time_status':'unknown','groww_status':'unknown',
-        'trigger':'', 'need':'', 'evidence_excerpt':'', 'confidence':0,
-        'needs_human_review':True,'review_reason':why}
+def empty_analysis(r, why, retryable=False, model_requested='', model_used=''):
+    return {
+        'record_id': r['record_id'], 'relevance': 'uncertain', 'theme': 'other',
+        'sip_behavior': 'unknown', 'first_time_status': 'unknown',
+        'groww_status': 'unknown', 'trigger': '', 'need': '',
+        'evidence_excerpt': '', 'confidence': 0.0,
+        'needs_human_review': True, 'review_reason': why,
+        'retryable': bool(retryable), 'model_requested': model_requested,
+        'model_used': model_used
+    }
 
+
+def is_retryable_abstention(row):
+    """Also recognizes the transport failure rows saved by older versions."""
+    if row.get('retryable') is True:
+        return True
+    reason = str(row.get('review_reason') or '').lower()
+    return row.get('relevance') == 'uncertain' and any(
+        term in reason for term in (
+            'http 429', 'http 500', 'http 502', 'http 503', 'http 504',
+            'timed out', 'network request failed', 'empty classification',
+            'token limit reached', 'no completion'
+        )
+    )
+
+
+def prefilter_records(records):
+    """Separate SIP-keyword candidates from other records for cost control."""
+    pattern = re.compile(
+        r'\b(sips?|mutual funds?|systematic investments?|xirr|e[- ]?nach|autopay|mandate|instalments?|installments?|monthly investment|nivesh|kisht)\b',
+        re.I
+    )
+    matched, unmatched = [], []
+    for record in records:
+        (matched if pattern.search(str(record.get('text') or '')) else unmatched).append(record)
+    return matched, unmatched
 
 def validate_analysis(r, obj):
-    result=empty_analysis(r,'')
-    for key in ['relevance','theme','sip_behavior','first_time_status','groww_status',
-                'trigger','need','evidence_excerpt','confidence','needs_human_review','review_reason']:
-        if key in obj: result[key]=obj[key]
-    if result['relevance'] not in RELEVANCE: result['relevance']='uncertain'
-    if result['theme'] not in THEMES: result['theme']='other'
-    if result['sip_behavior'] not in BEHAVIORS: result['sip_behavior']='unknown'
-    for field in ['first_time_status','groww_status']:
-        if result[field] not in ['confirmed','unknown','not_confirmed']: result[field]='unknown'
-    try: result['confidence']=max(0.0,min(1.0,float(result['confidence'])))
-    except (ValueError,TypeError): result['confidence']=0.0
-    text=r['text']
-    excerpt=str(result['evidence_excerpt'] or '').strip()
+    """Conservative AI validation that retains all human-review reasons."""
+    if not isinstance(obj, dict):
+        return empty_analysis(r, 'AI classification is not a JSON object.')
+    result = empty_analysis(r, '')
+    for field in (
+        'relevance', 'theme', 'sip_behavior', 'first_time_status',
+        'groww_status', 'trigger', 'need', 'evidence_excerpt',
+        'confidence', 'needs_human_review', 'review_reason'
+    ):
+        if field in obj:
+            result[field] = obj[field]
+    reasons = [str(result.get('review_reason')).strip()] if result.get('review_reason') else []
+    def flag(why):
+        result['needs_human_review'] = True
+        if why not in reasons:
+            reasons.append(why)
+    review_flag = result.get('needs_human_review')
+    if isinstance(review_flag, bool):
+        result['needs_human_review'] = review_flag
+    elif isinstance(review_flag, str) and review_flag.strip().lower() in ('true', 'false'):
+        result['needs_human_review'] = review_flag.strip().lower() == 'true'
+    else:
+        flag('Invalid model human-review flag.')
+    for field, allowed, fallback in (
+        ('relevance', RELEVANCE, 'uncertain'),
+        ('theme', THEMES, 'other'),
+        ('sip_behavior', BEHAVIORS, 'unknown')
+    ):
+        if result[field] not in allowed:
+            result[field] = fallback
+            flag(f'Invalid {field} value.')
+    for field in ('first_time_status', 'groww_status'):
+        if result[field] not in USER_STATUS:
+            result[field] = 'unknown'
+            flag(f'Invalid {field} value.')
+    try:
+        val = float(result['confidence'])
+        if not (val == val and abs(val) != float('inf')):
+            raise ValueError('nonfinite')
+        result['confidence'] = max(0.0, min(1.0, val))
+    except (ValueError, TypeError):
+        result['confidence'] = 0.0
+        flag('Invalid model confidence.')
+    if result['confidence'] < 0.70:
+        flag('Low model confidence; needs human review.')
+    text = str(r.get('text') or '')
+    excerpt = str(result['evidence_excerpt'] or '').strip()
     if excerpt and excerpt.lower() not in text.lower():
-        result['needs_human_review']=True
-        result['review_reason']='AI evidence quote not present verbatim in source text.'
-        result['evidence_excerpt']=''
-    # Confirmed labels require explicit self-report or platform context; never assume user identity.
-    if result['first_time_status']=='confirmed' and not re.search(r'\b(first|beginner|new to|started my first)\b',text,re.I):
-        result['first_time_status']='unknown'; result['needs_human_review']=True
-        result['review_reason']='First-time status not explicitly supported.'
-    if result['groww_status']=='confirmed' and not (r['source'] in ('apple_app_store','google_play') or re.search(r'\bgroww\b',text,re.I)):
-        result['groww_status']='unknown'; result['needs_human_review']=True
-        result['review_reason']='Groww status not supported by source.'
-    if result['relevance']=='sip_relevant' and not re.search(r'\b(sip|systematic investment|mutual fund|instalment|installment)\b',text,re.I):
-        result['needs_human_review']=True
-        result['review_reason']='SIP relevance is not explicit in text; human verification required.'
-    result['record_id']=r['record_id']
+        flag('AI evidence quote not verbatim in source.')
+        result['evidence_excerpt'] = ''
+    supported_first = re.search(
+        r'\b(?:my first (?:sip|mutual fund|investment)|first[- ]time (?:sip|mutual[- ]fund )?investor|first[- ]time sip|new to (?:sips?|mutual funds?|investing)|started (?:my|a) first sip)\b',
+        text, re.I
+    )
+    negated_first = re.search(r'\b(?:not|never)\s+(?:a|an)?\s*first[- ]time\b', text, re.I)
+    if result['first_time_status'] == 'confirmed' and (not supported_first or negated_first):
+        result['first_time_status'] = 'unknown'
+        flag('First-time status not explicitly supported.')
+    if result['groww_status'] == 'confirmed' and not (
+        r.get('source') in ('apple_app_store', 'google_play') or
+        re.search(r'\bgroww\b', text, re.I)
+    ):
+        result['groww_status'] = 'unknown'
+        flag('Groww status not supported by source.')
+    if result['relevance'] == 'sip_relevant' and not re.search(
+        r'\b(sips?|systematic investments?|mutual funds?|instalments?|installments?|xirr|enach|e-nach)\b',
+        text, re.I
+    ):
+        flag('SIP relevance is not explicit; human verification required.')
+    result['review_reason'] = '; '.join(filter(None, reasons))
+    result['record_id'] = r['record_id']
     return result
+
+
+def parse_model_json(raw):
+    """Extract the first well-formed JSON object from a model response."""
+    if not isinstance(raw, str):
+        raise ValueError('No text returned')
+    for index, char in enumerate(raw[:50000]):
+        if char != '{':
+            continue
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(raw[index:])
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            continue
+    raise ValueError('No JSON object found')
 
 SYSTEM_PROMPT = '''You are a rigorous user researcher analyzing public Indian investing app reviews.
 This is product discovery, not financial advice. Output ONLY a valid JSON object matching keys:
@@ -304,102 +393,151 @@ Never recommend funds/stocks, and don't use fear/FOMO/urgency nudges.'''
 
 
 def analyze_with_openrouter(records, api_key, model='openrouter/free'):
-    """Classify records through OpenRouter chat completions.
-
-    Same one-request-per-record workflow and validation as the xAI version.
-    An API failure or invalid model output produces an abstention, never a fake label.
-    """
+    """One request per item; failed transient requests can be retried."""
     if not api_key or not str(api_key).strip():
-        raise ValueError('OPENROUTER_API_KEY is required for AI analysis.')
-    if not model or not str(model).strip():
-        model = 'openrouter/free'
-
+        raise ValueError('OPENROUTER_API_KEY is required.')
+    model = str(model or 'openrouter/free').strip()
     outputs = []
-    for r in records:
-        payload = {'review': r['text'], 'review_source': r['source'], 'scope': r['scope']}
+    for record in records:
+        request_data = {
+            'review': record['text'], 'review_source': record['source'],
+            'scope': record.get('scope', 'unknown')
+        }
         try:
-            resp = requests.post(
+            response = requests.post(
                 'https://openrouter.ai/api/v1/chat/completions',
                 headers={
                     'Authorization': f'Bearer {str(api_key).strip()}',
                     'Content-Type': 'application/json',
                 },
                 json={
-                    'model': str(model).strip(),
+                    'model': model,
                     'messages': [
                         {'role': 'system', 'content': SYSTEM_PROMPT},
-                        {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)},
+                        {'role': 'user', 'content': json.dumps(request_data, ensure_ascii=False)}
                     ],
+                    'temperature': 0,
                     'max_tokens': 2500,
                 },
-                timeout=65,
+                timeout=45
             )
-            if not resp.ok:
-                outputs.append(empty_analysis(r, f'OpenRouter HTTP {resp.status_code}; abstain.'))
+            if not response.ok:
+                code = int(response.status_code)
+                outputs.append(empty_analysis(
+                    record, f'OpenRouter HTTP {code}; abstain.',
+                    retryable=(code == 429 or code >= 500),
+                    model_requested=model
+                ))
                 continue
-
-            data = resp.json()
-            choices = data.get('choices') if isinstance(data, dict) else None
+            response_data = response.json()
+            choices = response_data.get('choices') if isinstance(response_data, dict) else None
+            actual_model = str(response_data.get('model') or model) if isinstance(response_data, dict) else model
             if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
-                outputs.append(empty_analysis(r, 'OpenRouter returned no completion; abstain.'))
+                outputs.append(empty_analysis(
+                    record, 'OpenRouter returned no completion; abstain.',
+                    retryable=True, model_requested=model, model_used=actual_model
+                ))
                 continue
-            choice = choices[0]
-            message = choice.get('message')
+            message = choices[0].get('message')
             raw = message.get('content') if isinstance(message, dict) else None
             if not isinstance(raw, str) or not raw.strip():
-                finish = choice.get('finish_reason', 'unknown')
-                # Only preserve a small fixed-status diagnostic; never raw provider errors or secrets.
-                if finish == 'length':
-                    reason = 'OpenRouter output token limit reached; abstain.'
-                else:
-                    reason = 'OpenRouter returned empty classification; abstain.'
-                outputs.append(empty_analysis(r, reason))
+                outputs.append(empty_analysis(
+                    record, 'OpenRouter returned empty classification; abstain.',
+                    retryable=True, model_requested=model, model_used=actual_model
+                ))
                 continue
-
-            raw = raw.strip()
-            if raw.startswith('```'):
-                raw = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw, flags=re.IGNORECASE).strip()
-            obj = json.loads(raw)
-            if not isinstance(obj, dict):
-                outputs.append(empty_analysis(r, 'OpenRouter classification was not a JSON object; abstain.'))
-                continue
-            outputs.append(validate_analysis(r, obj))
+            obj = parse_model_json(raw)
+            output = validate_analysis(record, obj)
+            output.update({
+                'retryable': False,
+                'model_requested': model,
+                'model_used': actual_model
+            })
+            outputs.append(output)
         except requests.Timeout:
-            outputs.append(empty_analysis(r, 'OpenRouter request timed out; abstain.'))
+            outputs.append(empty_analysis(
+                record, 'OpenRouter request timed out; abstain.',
+                retryable=True, model_requested=model
+            ))
         except requests.RequestException:
-            outputs.append(empty_analysis(r, 'OpenRouter network request failed; abstain.'))
+            outputs.append(empty_analysis(
+                record, 'OpenRouter network request failed; abstain.',
+                retryable=True, model_requested=model
+            ))
         except (ValueError, KeyError, IndexError, TypeError, AttributeError):
-            outputs.append(empty_analysis(r, 'OpenRouter classification invalid or unreadable; abstain.'))
+            outputs.append(empty_analysis(
+                record, 'OpenRouter classification invalid or unreadable; abstain.',
+                retryable=False, model_requested=model
+            ))
     return outputs
 
-
 def eval_gold(gold, model_outputs):
-    """Exact match by record_id; partial or missing model output counts as no match."""
-    by_id={x['record_id']:x for x in model_outputs}
-    labels=('relevance','theme','sip_behavior')
-    total=len(gold)
-    result={'n':total,'ready_for_assignment':total>=20,'fields':{},'mismatches':[]}
-    for field in labels:
-        good=0; checked=0
+    """Small-sample evaluation with exact matches, confusion matrices and kappa."""
+    by_id = {item['record_id']: item for item in model_outputs}
+    fields = ('relevance', 'theme', 'sip_behavior')
+    report = {'n': len(gold), 'ready_for_assignment': len(gold) >= 20,
+              'fields': {}, 'mismatches': []}
+    for field in fields:
+        confusion, human_counts, ai_counts = {}, Counter(), Counter()
+        correct = 0
         for entry in gold:
-            if not entry.get(field): continue
-            checked+=1
-            model=by_id.get(entry['record_id'],{})
-            if model.get(field)==entry[field]:good+=1
-            else:result['mismatches'].append({'record_id':entry['record_id'],'field':field,
-                'human':entry[field],'model':model.get(field,'MISSING')})
-        result['fields'][field]={'correct':good,'total':checked,
-                                'agreement':round(good/checked,3) if checked else None}
-    return result
-
+            human = entry.get(field)
+            if not human:
+                continue
+            predicted = by_id.get(entry['record_id'], {}).get(field, 'MISSING')
+            human_counts[human] += 1
+            ai_counts[predicted] += 1
+            confusion.setdefault(human, {})
+            confusion[human][predicted] = confusion[human].get(predicted, 0) + 1
+            if predicted == human:
+                correct += 1
+            else:
+                report['mismatches'].append({
+                    'record_id': entry['record_id'], 'field': field,
+                    'human': human, 'model': predicted
+                })
+        n = sum(human_counts.values())
+        agreement = correct / n if n else None
+        expected = (sum(human_counts[k] * ai_counts[k] for k in human_counts) / (n*n)
+                    if n else None)
+        kappa = ((agreement - expected) / (1 - expected)
+                 if n and expected < 1 else None)
+        report['fields'][field] = {
+            'correct': correct, 'total': n,
+            'agreement': round(agreement, 3) if n else None,
+            'cohen_kappa': round(kappa, 3) if kappa is not None else None,
+            'confusion_matrix': confusion,
+            'human_class_counts': dict(human_counts),
+            'ai_class_counts': dict(ai_counts)
+        }
+    return report
 
 def summary(records, labels):
-    by_id={x['record_id']:x for x in labels}
-    eligible=[r for r in records if by_id.get(r['record_id'],{}).get('relevance')=='sip_relevant']
-    return {'records':len(records),'sip_relevant':len(eligible),
-            'source_counts':dict(Counter(r['source'] for r in records)),
-            'theme_counts':dict(Counter(by_id[r['record_id']]['theme'] for r in eligible))}
-
+    """Do not count low-confidence or flagged labels as accepted findings."""
+    by_id = {x['record_id']: x for x in labels}
+    accepted = [
+        record for record in records
+        if by_id.get(record['record_id'], {}).get('relevance') == 'sip_relevant'
+        and not by_id[record['record_id']].get('needs_human_review', True)
+        and float(by_id[record['record_id']].get('confidence', 0) or 0) >= 0.70
+    ]
+    candidates, unmatched = prefilter_records(records)
+    source_theme = {}
+    for record in accepted:
+        source = record['source']
+        theme = by_id[record['record_id']]['theme']
+        source_theme.setdefault(source, {})
+        source_theme[source][theme] = source_theme[source].get(theme, 0) + 1
+    return {
+        'records': len(records), 'sip_relevant': len(accepted),
+        'source_counts': dict(Counter(r['source'] for r in records)),
+        'theme_counts': dict(Counter(by_id[r['record_id']]['theme'] for r in accepted)),
+        'source_theme_counts': source_theme,
+        'rating_counts': dict(Counter(str(r.get('rating')) for r in records)),
+        'keyword_candidates': len(candidates), 'keyword_unmatched': len(unmatched),
+        'abstentions': sum(1 for row in labels
+            if is_retryable_abstention(row) or float(row.get('confidence', 0) or 0) == 0)
+    }
 
 def to_csv_bytes(rows):
     if not rows:return b''
