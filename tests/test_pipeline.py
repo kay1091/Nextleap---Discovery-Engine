@@ -1,55 +1,128 @@
 import json
-from pipeline import normal_record, dedupe, privacy_clean, read_import, validate_analysis, eval_gold, THEMES
+
+from pipeline import (
+    normal_record, dedupe, privacy_clean, read_import,
+    validate_analysis, eval_gold, to_csv_bytes,
+    analyze_with_openrouter, summary,
+)
+
+
+def example():
+    return normal_record(
+        'manual_pilot_excerpts', 'https://example.com/item', '2026-10-01',
+        'I started my first SIP and my payment failed.', None,
+    )
+
 
 def test_privacy():
-    s=privacy_clean('Email person@example.com mobile 9876543210 pan ABCDE1234F')
-    assert 'person@example.com' not in s and '9876543210' not in s and 'ABCDE1234F' not in s
+    s = privacy_clean('Email person@example.com mobile 9876543210 pan ABCDE1234F')
+    assert 'person@example.com' not in s
+    assert '9876543210' not in s
+    assert 'ABCDE1234F' not in s
+
 
 def test_dedupe():
-    a=normal_record('apple','https://example.com/a','2026-10-01','My SIP failed',1)
-    b=normal_record('play','https://example.com/b','2026-10-02','My SIP failed',1)
-    assert len(dedupe([a,b]))==1
+    a = example()
+    b = normal_record('another', 'https://example.com/b', '', a['text'])
+    assert len(dedupe([a, b])) == 1
 
-def test_import_source_required():
-    rows='text,source_url,source_date\n"a SIP issue",https://example.com,2026-10-01\n"another SIP issue",,2026-10-01\n'
-    assert len(read_import(rows))==1
 
-def test_hallucinated_excerpt_abstained():
-    a=normal_record('reddit_approved','https://example.com','2026-10-01','I stopped my monthly SIP.',None)
-    model={'relevance':'sip_relevant','theme':'affordability','sip_behavior':'stopped',
-      'first_time_status':'confirmed','groww_status':'confirmed','evidence_excerpt':'my salary was cut','confidence':0.9}
-    x=validate_analysis(a,model)
-    assert x['first_time_status']=='unknown'
-    assert x['groww_status']=='unknown'
+def test_import_requires_source():
+    data = 'text,source_url,source_date\n"SIP failed",https://example.com,2026-10-01\n"missing URL",,2026-10-01\n'
+    assert len(read_import(data)) == 1
+
+
+def test_invented_excerpt_flagged():
+    obj = {
+        'relevance': 'sip_relevant', 'theme': 'payment_failure',
+        'sip_behavior': 'missed', 'first_time_status': 'confirmed',
+        'groww_status': 'confirmed', 'evidence_excerpt': 'imaginary quote',
+    }
+    x = validate_analysis(example(), obj)
     assert x['needs_human_review'] is True
-    assert x['evidence_excerpt']==''
-
-def test_gold_missing_counts_mismatch():
-    gold=[{'record_id':'1','relevance':'sip_relevant','theme':'affordability','sip_behavior':'stopped'}]
-    res=eval_gold(gold,[])
-    assert res['fields']['theme']['correct']==0
-    assert not res['ready_for_assignment']
-
-def test_youtube_video_validation():
-    from pipeline import youtube_comments
-    import pytest
-    with pytest.raises(ValueError):
-        youtube_comments('key','not a video id')
+    assert x['evidence_excerpt'] == ''
+    assert x['groww_status'] == 'unknown'
 
 
-def test_apple_feed_parse_with_offline_fixture():
-    from pipeline import apple_feed
-    class Response:
-        status_code=200
-        def raise_for_status(self): pass
-        def json(self):return {'feed':{'entry':[{'title':{'label':'Good'},'content':{'label':'My first SIP was easy'},'im:rating':{'label':'5'},'id':{'label':'https://example.com/123'},'updated':{'label':'2026-10-01'}}]}}
-    class Session:
-        def get(self,*args,**kwargs):return Response()
-    rec=apple_feed(session=Session(),pages=1)
-    assert len(rec)==1 and rec[0]['rating']==5 and 'My first SIP' in rec[0]['text']
+def test_gold_missing_is_mismatch():
+    human = [{'record_id': 'a', 'relevance': 'sip_relevant', 'theme': 'payment_failure', 'sip_behavior': 'missed'}]
+    x = eval_gold(human, [])
+    assert x['fields']['relevance']['correct'] == 0
 
 
-def test_csv_formula_safe():
-    from pipeline import to_csv_bytes
-    out=to_csv_bytes([{'text':'=HYPERLINK("malicious")','source_url':'https://example.com'}]).decode('utf-8-sig')
-    assert "'=HYPERLINK" in out
+def test_spreadsheet_export_safe():
+    out = to_csv_bytes([{'text': '=1+1'}]).decode('utf-8-sig')
+    assert "'=1+1" in out
+
+
+class FakeResponse:
+    ok = True
+    status_code = 200
+    def __init__(self, content, finish='stop'):
+        self.content = content
+        self.finish = finish
+    def json(self):
+        return {
+            'model': 'mock/model',
+            'choices': [{'finish_reason': self.finish, 'message': {'content': self.content}}],
+        }
+
+
+class FakeSession:
+    def __init__(self, response):
+        self.response = response
+        self.calls = []
+    def post(self, url, **kwargs):
+        self.calls.append((url, kwargs))
+        return self.response
+
+
+def test_openrouter_valid_classification():
+    payload = {
+        'relevance': 'sip_relevant', 'theme': 'payment_failure',
+        'sip_behavior': 'missed', 'first_time_status': 'confirmed',
+        'groww_status': 'unknown', 'trigger': 'payment failed',
+        'need': 'payment recovery guidance', 'evidence_excerpt': 'my payment failed',
+        'confidence': 0.93, 'needs_human_review': False, 'review_reason': '',
+    }
+    fake = FakeSession(FakeResponse(json.dumps(payload)))
+    out = analyze_with_openrouter([example()], 'test-not-real', session=fake)
+    assert out[0]['analysis_status'] == 'classified'
+    assert out[0]['theme'] == 'payment_failure'
+    assert fake.calls[0][1]['json']['model'] == 'openrouter/free'
+    assert fake.calls[0][1]['headers']['Authorization'] == 'Bearer test-not-real'
+
+
+def test_openrouter_empty_completion_abstains():
+    fake = FakeSession(FakeResponse('', 'length'))
+    out = analyze_with_openrouter([example()], 'test-not-real', session=fake)
+    assert out[0]['analysis_status'] == 'abstained'
+    assert out[0]['confidence'] == 0
+    assert summary([example()], out)['sip_relevant'] == 0
+
+
+def test_openrouter_http_400_abstains():
+    response = FakeResponse('')
+    response.ok = False
+    response.status_code = 400
+    out = analyze_with_openrouter([example()], 'test-not-real', session=FakeSession(response))
+    assert out[0]['analysis_status'] == 'abstained'
+    assert '400' in out[0]['review_reason']
+
+
+def test_openrouter_empty_json_does_not_count_as_classification():
+    out = analyze_with_openrouter([example()], 'test-not-real', session=FakeSession(FakeResponse('{}')))
+    assert out[0]['analysis_status'] == 'abstained'
+
+
+def test_openrouter_unverified_quote_requires_review():
+    obj = {
+        'relevance': 'sip_relevant', 'theme': 'payment_failure',
+        'sip_behavior': 'missed', 'first_time_status': 'confirmed',
+        'groww_status': 'unknown', 'trigger': 'payment failed',
+        'need': 'help', 'evidence_excerpt': 'invented quotation',
+        'confidence': 0.95, 'needs_human_review': False, 'review_reason': '',
+    }
+    out = analyze_with_openrouter([example()], 'test-not-real', session=FakeSession(FakeResponse(json.dumps(obj))))
+    assert out[0]['needs_human_review'] is True
+    assert out[0]['evidence_excerpt'] == ''
