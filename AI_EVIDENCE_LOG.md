@@ -1,3 +1,134 @@
+# NextLeap Graduation Project — AI Evidence Log
+
+**Topic:** Groww — first-time SIP investors' understanding of return figures  
+**Prepared for:** NextLeap Product Management Graduation Project, 9 November 2026  
+**Sharing:** This Markdown file is in a PUBLIC GitHub repository and can be viewed without an invitation.  
+**Scope:** One consolidated submission document. The original detailed research is preserved as an appendix below.
+
+## 1. Public prototypes and source code
+
+| Resource | Public link | Purpose |
+|---|---|---|
+| **Deployed AI-native MVP — SIP Performance Explainer** | [Open the interactive Streamlit MVP](https://nextleap-mvp---groww-82tkunzrvr5pmft5eauazp.streamlit.app/) | Ask a natural-language question using hypothetical investment figures |
+| **AI Discovery Engine** | [Open the deployed Streamlit Discovery Engine](https://nextleap---discovery-engine-fwqgbhz7obxd435fk6fshi.streamlit.app/) | Collect feedback, classify with OpenRouter, explore themes, perform human evaluation |
+| **Discovery Engine source** | [GitHub repository](https://github.com/kay1091/Nextleap---Discovery-Engine) | Source files, tests, methodology |
+| **Automated code tests** | [GitHub Actions run: 19/19 passed](https://github.com/kay1091/Nextleap---Discovery-Engine/actions/runs/42503668768) | Offline software regressions; not human research validation |
+
+The two Streamlit URLs were provided from the project deployment context. An independent unauthenticated interactive smoke test is not documented here. Check both links in a private browser before final submission. The Discovery Engine has a passcode for administration, so public visitors should see its read-only view without being given the passcode.
+
+## 2. Sources and volumes the engine analyzed
+
+**Important distinction:** The legacy, offline large-corpus pipeline documented in the appendix and the later Streamlit/OpenRouter demonstration are two related but DIFFERENT research implementations. Their volumes must not be added together.
+
+### 2A. Earlier offline discovery pipeline — reported corpus counts
+
+These figures come from the archived pipeline's output tables. They were not independently recollected or revalidated for this submission.
+
+| Source | Reported raw records | Collection limitation |
+|---|---:|---|
+| Apple App Store | 5,500 | Limited public/store-review coverage |
+| Google Play | 35,550 | Collector output; not internal Groww analytics |
+| Reddit | 19,021 | Archive/API acquisition; permissions and redistribution must be checked |
+| TradingQ&A | 5,872 | Self-selected forum discussions |
+| ValuePickr | 7,708 | Self-selected forum discussions |
+| X | 137 | Small, noisy keyword-search sample |
+| YouTube | 41,600 | Comments from selected videos; not representative |
+| **Total** | **115,388** | Raw collection, not confirmed SIP complaints |
+
+Archived pipeline stages reported **97,298 unique documents**, **36,343 relevant non-spam documents**, and **19,061 SIP-journey-core documents**. The archived research reported an ensemble **micro-F1 of 0.44**. Its 150-item holdout and other labels were assigned by an **LLM analyst**, without an independent human second coder. Therefore these are not user-verified golden-set results.
+
+### 2B. Current deployed Streamlit/OpenRouter Discovery Engine
+
+Sources available in the current interface: Apple India RSS reviews; optional Google Play via Apify; optional YouTube Data API; and permission-checked CSV/JSON imports for approved data. It labels SIP relevance, theme, behavior, first-time status, Groww status, evidence excerpt and confidence.
+
+- In a screenshot from 8 November 2026, the app displayed **548 unique source records**, **30 AI classifications** and **0 human gold labels**. These were session counters, not independently audited persistent records.
+- A separate exported OpenRouter classification CSV supplied for review contained **3 records**: **2 not-SIP-related**, **1 uncertain**, **0 confirmed SIP-relevant**, with **2 flagged for human review**. This export is not evidence for the performance-confusion hypothesis.
+- The free OpenRouter routing produced different underlying model identifiers. Newer code saves the model identifier returned, when available.
+- Source and AI counters are not permanent because this prototype uses Streamlit session state. Export source records, classification CSV and human labels; restore them after a restart.
+
+Neither set of collected reviews measures first-year Groww SIP investor cohorts, dropout rates or a causal relationship between confusion and continuing SIPs.
+
+## 3. Human-labelled golden set — REQUIRED BUT NOT YET EVIDENCED
+
+**Submission requirement:** Approximately **20 distinct real source items**, personally labelled by the researcher without first relying on the AI's answer, compared with the engine's classifications. The human sheet needs source URL, stable record ID, relevance, theme, observed behavior, reasoning, AI prediction, and any correction.
+
+**Current verified status:** No accessible export or repository artifact establishes that approximately 20 actual Discovery Engine source records were labelled personally by the student. The older **150-item holdout was labelled by the LLM**, not a human researcher. A file called **golden_set_review.csv** contains **20 example questions for the separate MVP quality gate**, with blank human/AI result columns; it is not a finished Discovery Engine golden set.
+
+| Requested output | Evidence status |
+|---|---|
+| Approximately 20 personally reviewed source-linked comments | **Pending** |
+| Human-vs-AI SIP relevance agreement | **Not computable from available human labels** |
+| Human-vs-AI theme agreement | **Not computable from available human labels** |
+| Human-vs-AI observed-behavior agreement | **Not computable from available human labels** |
+| Confusion matrices and Cohen's kappa | App supports calculations; **no verified 20-label result** |
+| 2–3 firsthand human-rejected AI classifications | **Pending** |
+
+**Completion method:** Use the current Discovery Engine's Human evaluation tab. Independently label about 20 source-linked reviews, export the human gold CSV, and compare it with the OpenRouter classification CSV on matching record IDs. Export the joined Evidence Log, then fill in real agreement statistics and actual corrections in this section. The app deliberately hides AI labels until 20 manual labels have been entered, to support blinding. Do not count missing AI predictions as correct.
+
+## 4. Documented AI/automation errors and corrections
+
+The three cases below are real corrections **documented in earlier analysis or regression work**, but **are not being misrepresented as independently human-labelled OpenRouter golden-set corrections**.
+
+| Example | Problem | What was corrected and why |
+|---|---|---|
+| **Set-and-forget false positive** | The earlier BH_FORGET coding rule treated ordinary set-and-forget SIP advice as someone failing to notice a stopped SIP. The archived A5 audit found 0 genuine examples among 20 under that rule. | Removed that rule from the A5 finding. “Forget” alone is not evidence of SIP interruption. |
+| **Beverage “sip” confusion** | The first X keyword sample contained posts about drinking, not systematic investment plans. | Applied an off-topic relevance filter instead of accepting keyword matches as investor evidence. |
+| **“First of every month” falsely suggests first-time status** | Earlier first-time validation could accept a generic word such as “first”, or a negated phrase, as a novice-investor signal. | Tightened the first-time evidence rule, and added a regression test. This is a code-review correction, not a verified live model disagreement. |
+
+Additional historical self-audits and errors appear in the appendix. Three actual human-versus-AI corrections should be added after manual golden-set review.
+
+## 5. Deployed AI-native MVP — SIP Performance Explainer
+
+**Try the MVP:** [SIP Performance Explainer on Streamlit](https://nextleap-mvp---groww-82tkunzrvr5pmft5eauazp.streamlit.app/)
+
+**Target scenario:** A first-year mutual-fund SIP investor sees a negative one-day movement while their total value may still show a gain, and asks whether money was charged or deducted.
+
+**Interactive user flow:**
+1. Type a question in everyday language.
+2. Provide **hypothetical** invested and current values.
+3. OpenRouter classifies the question into a supported educational topic: daily versus total movement, invested versus current value, XIRR or SIP versus lump sum.
+4. The app checks structured AI output, confidence and topic agreement.
+5. It presents predefined, reviewed educational language and arithmetic. Invalid/unsupported outputs fall back safely. A static glossary is also available.
+
+The MVP is **AI-native in question understanding**, but it does **not** give unrestricted AI-generated investment advice, access user accounts, verify real charges, recommend funds or forecast returns.
+
+### Actually observed MVP quality result
+
+One reported live case produced **PASS**:
+
+| Field | Observed result |
+|---|---|
+| User question | “My 1D return is −₹450 but my total return is positive. Was ₹450 deducted as a charge?” |
+| Hypothetical investment | ₹18,000 |
+| Hypothetical current value | ₹19,200 |
+| Independently calculated total gain | **+₹1,200 (+6.67%)** |
+| AI-classified topic | Daily vs total return |
+| Quality gate | **PASS for this case** |
+
+Other proposed MVP scenarios (XIRR, an investment loss, advice requests and API failure) are marked **NOT VERIFIED** in the available test matrix. Passing a single case is not a claim of comprehensive safety coverage.
+
+### Early user tests and V1.1 iteration
+
+Three people tested the initial explanation flow: one first-year SIP investor and two experienced comparisons. In the reported feedback, **3/3 understood the concept tested**, **1/3 preferred AI**, **2/3 preferred the static glossary**, and all found some quality-check terminology technical. V1.1 changed “Quality gate: PASS” to “Explanation checked”, while retaining the safety logic. A fresh retest with the first-year investor confirmed understanding for the same example, but did not establish measurable before/after improvement.
+
+**What is not established:** Real 12-month SIP continuation impact, broad model accuracy, a representative participant sample, or that this solution is more effective than the glossary overall.
+
+## 6. Final submission readiness
+
+**Document view access:** Public GitHub Markdown; no invitation required.  
+**Sources and volume:** Included, carefully separated by research implementation.  
+**~20 human-labelled golden set and agreement:** **Outstanding.**  
+**2–3 firsthand human corrections of AI classifications:** **Outstanding; historical documented errors are supplied with clear provenance.**  
+**Public AI-native MVP:** Linked; independent incognito interaction check recommended.  
+**Privacy and permissions:** Public comments may have source/provider usage restrictions. Do not republish or transmit restricted/identifying content without authorization.
+
+---
+
+# Appendix: Archived detailed Discovery Engine research
+
+The original research report follows unchanged. Its “hand-labelled” or “gold” references refer to LLM-analyst labelling, not an independently human-labelled golden set. Its volumes and model metrics should not be attributed to the newer Streamlit/OpenRouter app.
+
+
 # AI Evidence Log - Groww SIP-retention Discovery Engine
 
 *Generated by `scripts/10_make_docs.py` from computed outputs. Every number below is read from a file in `outputs/` or `data/processed/`; nothing is typed by hand. Scope note: this is a **public-text** engine; it is not Groww internal data.*
